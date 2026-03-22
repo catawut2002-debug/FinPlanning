@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinPlanner — Fit UI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Thai:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root{
+      --bg:#0b0f0c;
+      --surface:#101611;
+      --surface-2:#141d15;
+      --surface-3:#18241a;
+      --card:#0e140f;
+      --line:rgba(171,255,96,.12);
+      --line-strong:rgba(171,255,96,.28);
+      --text:#f6fff0;
+      --muted:#9ab08f;
+      --soft:#6f8366;
+      --lime:#b8ff62;
+      --lime-2:#7cff45;
+      --lime-3:#d8ffb4;
+      --danger:#ff6b6b;
+      --warning:#ffd166;
+      --ok:#80ed99;
+      --shadow:0 24px 60px rgba(0,0,0,.42);
+      --radius:28px;
+      --radius-sm:18px;
+      --max:1400px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:radial-gradient(circle at top center, rgba(145,255,75,.08), transparent 28%), var(--bg);color:var(--text);font-family:"Inter","Noto Sans Thai",system-ui,sans-serif}
+    body{min-height:100vh}
+    button,input,select{font:inherit}
+    a{text-decoration:none;color:inherit}
+    .app-shell{max-width:var(--max);margin:0 auto;padding:20px}
+    .topbar{
+      position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:16px;
+      padding:14px 18px;margin-bottom:20px;border:1px solid var(--line);border-radius:24px;background:rgba(10,14,11,.72);backdrop-filter:blur(16px);box-shadow:var(--shadow)
+    }
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand-badge{
+      width:46px;height:46px;border-radius:14px;flex-shrink:0;
+      background:linear-gradient(145deg,#c8ff6a,#5edf22);
+      display:grid;place-items:center;
+      box-shadow:0 0 0 1px rgba(255,255,255,.15) inset, 0 4px 24px rgba(120,255,60,.4);
+      position:relative;overflow:hidden;
+    }
+    .brand-badge::after{
+      content:'';position:absolute;inset:0;
+      background:linear-gradient(135deg,rgba(255,255,255,.28) 0%,transparent 55%);
+    }
+    .brand-badge svg{position:relative;z-index:1}
+    .brand-name{margin:0;font-size:1.18rem;line-height:1;font-weight:900;letter-spacing:-.05em;display:flex;align-items:baseline;gap:0}
+    .brand-name .fin{
+      color:var(--lime);font-style:italic;
+      text-shadow:0 0 18px rgba(184,255,98,.45)
+    }
+    .brand-name .plan{color:var(--text)}
+    .brand-tag{margin:4px 0 0;color:var(--soft);font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+    .pill-btn{
+      height:40px;padding:0 14px;border-radius:12px;
+      background:rgba(255,255,255,.06);color:var(--muted);
+      border:1px solid var(--line);font-size:.85rem;font-weight:700;
+      letter-spacing:.04em;transition:.2s ease
+    }
+    .pill-btn:hover{background:rgba(255,255,255,.1);color:var(--text);transform:translateY(-1px)}
+    .top-actions{display:flex;align-items:center;gap:10px}
+    .icon-btn,.pill-btn,.nav-btn,.seg-btn,.loan-btn,.floating-nav button{
+      border:none;cursor:pointer;transition:.2s ease
+    }
+    .icon-btn,.pill-btn{
+      height:44px;padding:0 16px;border-radius:14px;background:var(--surface-2);color:var(--text);border:1px solid var(--line)
+    }
+    .icon-btn:hover,.pill-btn:hover,.nav-btn:hover,.seg-btn:hover,.loan-btn:hover,.floating-nav button:hover{transform:translateY(-1px)}
+    .layout{display:grid;grid-template-columns:280px 1fr;gap:20px}
+    .sidebar{
+      position:sticky;top:92px;height:calc(100vh - 116px);padding:18px;border-radius:30px;background:linear-gradient(180deg, rgba(18,26,19,.96), rgba(9,13,10,.96));border:1px solid var(--line);box-shadow:var(--shadow);overflow:auto
+    }
+    .nav-head{font-size:.78rem;color:var(--soft);text-transform:uppercase;letter-spacing:.16em;margin:0 0 12px 4px;font-weight:800}
+    .nav-list{display:flex;flex-direction:column;gap:10px}
+    .nav-btn{
+      width:100%;display:flex;align-items:center;justify-content:flex-start;gap:14px;padding:14px 16px;border-radius:20px;background:transparent;color:var(--muted);border:1px solid transparent;text-align:left
+    }
+    .nav-btn .nav-icon{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:rgba(255,255,255,.04);font-size:18px}
+    .nav-btn.active{background:linear-gradient(180deg, rgba(188,255,98,.18), rgba(120,255,69,.08));color:var(--text);border-color:var(--line-strong);box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 12px 24px rgba(0,0,0,.18)}
+    .nav-btn.active .nav-icon{background:linear-gradient(135deg,var(--lime),#7cff45);color:#091006;font-weight:900}
+    .nav-copy strong{display:block;font-size:.98rem;line-height:1.1}
+    .nav-copy small{display:block;color:var(--soft);margin-top:4px}
+    .content{min-width:0}
+    .screen{display:none;animation:fade .25s ease}
+    .screen.active{display:block}
+    @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+    .hero{
+      position:relative;overflow:hidden;padding:28px;border-radius:32px;background:linear-gradient(145deg, rgba(28,44,25,.96), rgba(6,10,7,.98));border:1px solid var(--line);box-shadow:var(--shadow);margin-bottom:20px
+    }
+    .hero::before,.glow::before{
+      content:"";position:absolute;inset:auto -10% -35% auto;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle, rgba(166,255,73,.32), transparent 65%);pointer-events:none
+    }
+    .hero-top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}
+    .eyebrow{margin:0;color:var(--lime-3);font-weight:800;letter-spacing:.18em;text-transform:uppercase;font-size:.72rem}
+    .hero-title{margin:8px 0 10px;font-size:clamp(2.1rem,4vw,4.3rem);line-height:.92;font-weight:900;letter-spacing:-.06em;max-width:760px}
+    .hero-title .accent{color:var(--lime);text-shadow:0 0 22px rgba(156,255,77,.16)}
+    .hero-sub{margin:0;color:var(--muted);max-width:700px;font-size:1rem;line-height:1.6}
+    .hero-metric{display:grid;gap:10px;min-width:240px}
+    .mini-chip{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:.82rem;color:var(--muted);width:max-content}
+    .hero-value{font-size:clamp(2.4rem,5vw,5rem);line-height:.9;font-weight:900;letter-spacing:-.06em}
+    .hero-value-label{font-size:.88rem;color:var(--soft)}
+    .grid{display:grid;gap:18px}
+    .dashboard-grid{grid-template-columns:repeat(12, minmax(0,1fr));margin-bottom:20px}
+    .card{
+      position:relative;overflow:hidden;background:linear-gradient(180deg, rgba(16,22,17,.98), rgba(10,14,11,.98));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px
+    }
+    .card.soft{background:linear-gradient(180deg, rgba(16,22,17,.92), rgba(15,23,16,.92))}
+    .card h3,.section-title{margin:0}
+    .label{color:var(--soft);font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.15em}
+    .value-xl{font-size:clamp(2.8rem,6vw,5.5rem);line-height:.92;font-weight:900;letter-spacing:-.06em;margin:10px 0 0}
+    .value-lg{font-size:clamp(1.6rem,3vw,3rem);line-height:.95;font-weight:900;letter-spacing:-.05em;margin:8px 0 0}
+    .value-md{font-size:1.1rem;font-weight:800;margin-top:8px}
+    .card-sub{color:var(--muted);font-size:.92rem;margin-top:10px;line-height:1.5}
+    .hero-card{grid-column:span 6;min-height:310px;display:flex;flex-direction:column;justify-content:space-between;background:
+      radial-gradient(circle at 82% 14%, rgba(167,255,77,.28), transparent 30%),
+      linear-gradient(145deg, rgba(18,31,19,.98), rgba(7,10,8,.98));
+    }
+    .metric-card{grid-column:span 3;min-height:148px}
+    .wide-card{grid-column:span 6}
+    .progress-wrap{margin-top:14px}
+    .progress-track{height:10px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden;border:1px solid rgba(255,255,255,.03)}
+    .progress-bar{height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--lime),#6cff44);box-shadow:0 0 18px rgba(156,255,77,.28);width:0%}
+    .status-badge{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;font-size:.72rem;font-weight:900;text-transform:uppercase;letter-spacing:.12em;border:1px solid transparent}
+    .status-ok{background:rgba(128,237,153,.12);color:var(--ok);border-color:rgba(128,237,153,.18)}
+    .status-warn{background:rgba(255,209,102,.12);color:var(--warning);border-color:rgba(255,209,102,.18)}
+    .status-danger{background:rgba(255,107,107,.12);color:var(--danger);border-color:rgba(255,107,107,.18)}
+    .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:18px}
+    .section-title{font-size:clamp(1.6rem,3vw,2.8rem);font-weight:900;letter-spacing:-.05em}
+    .section-sub{margin:8px 0 0;color:var(--muted);line-height:1.5}
+    .panel-grid{display:grid;grid-template-columns:minmax(300px, 420px) minmax(0,1fr);gap:18px}
+    .stack{display:grid;gap:18px}
+    .panel{background:linear-gradient(180deg, rgba(16,22,17,.98), rgba(9,13,10,.98));border:1px solid var(--line);border-radius:30px;box-shadow:var(--shadow);padding:22px}
+    .panel.tight{padding:18px}
+    .panel .panel-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+    .panel .panel-title h3{font-size:1rem;font-weight:900;letter-spacing:-.02em;margin:0}
+    .panel .panel-title p{margin:3px 0 0;color:var(--soft);font-size:.88rem}
+    .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .field-grid.one{grid-template-columns:1fr}
+    .field{display:grid;gap:8px}
+    .field label{font-size:.84rem;color:var(--muted);font-weight:700}
+    input,select{
+      width:100%;height:54px;padding:0 16px;border-radius:18px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);outline:none;transition:.2s ease
+    }
+    input:focus,select:focus{border-color:var(--lime-2);box-shadow:0 0 0 4px rgba(156,255,77,.08);background:rgba(255,255,255,.06)}
+    .result-card{
+      min-height:100%;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:28px;border-radius:32px;border:1px solid var(--line);background:
+      radial-gradient(circle at 84% 14%, rgba(167,255,77,.18), transparent 28%),
+      linear-gradient(160deg, rgba(17,27,18,.98), rgba(7,10,8,.98));box-shadow:var(--shadow)
+    }
+    .result-card.center{align-items:center;text-align:center}
+    .result-hero{font-size:clamp(3rem,6vw,6.2rem);line-height:.9;font-weight:900;letter-spacing:-.07em;margin:10px 0}
+    .result-note{color:var(--muted);font-size:1rem;line-height:1.6;max-width:720px}
+    .stats-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .stat-box{padding:18px;border-radius:22px;background:rgba(255,255,255,.03);border:1px solid var(--line)}
+    .stat-box .k{font-size:.82rem;color:var(--muted);font-weight:700}
+    .stat-box .v{font-size:1.4rem;font-weight:900;letter-spacing:-.03em;margin-top:8px}
+    .timeline{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;align-items:start}
+    .timeline-step{padding:18px;border-radius:22px;background:rgba(255,255,255,.03);border:1px solid var(--line)}
+    .timeline-step strong{display:block;font-size:.82rem;color:var(--lime-3);text-transform:uppercase;letter-spacing:.14em;margin-bottom:8px}
+    .timeline-step p{margin:6px 0 0;color:var(--soft);font-size:.88rem}
+    .segmented{display:flex;gap:8px;flex-wrap:wrap;padding:6px;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid var(--line)}
+    .seg-btn,.loan-btn{padding:11px 14px;border-radius:14px;background:transparent;color:var(--muted);font-weight:800}
+    .seg-btn.active,.loan-btn.active{background:linear-gradient(135deg,var(--lime),#76ff48);color:#091006;box-shadow:0 12px 22px rgba(156,255,77,.24)}
+    .segment{display:none}
+    .segment.active{display:block;animation:fade .2s ease}
+    .table-wrap{overflow:auto;border-radius:24px;border:1px solid var(--line)}
+    table{width:100%;border-collapse:collapse;min-width:660px;background:rgba(255,255,255,.02)}
+    th,td{padding:14px 16px;text-align:right;border-bottom:1px solid rgba(255,255,255,.05)}
+    th:first-child,td:first-child{text-align:left}
+    th{font-size:.78rem;text-transform:uppercase;letter-spacing:.12em;color:var(--soft)}
+    td{font-size:.93rem;color:var(--text)}
+    tr:last-child td{border-bottom:none}
+    .gain{color:var(--ok);font-weight:800}
+    .loss{color:var(--danger);font-weight:800}
+    .bar-list{display:grid;gap:12px}
+    .bar-item{padding:16px;border-radius:22px;background:rgba(255,255,255,.03);border:1px solid var(--line)}
+    .bar-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:10px}
+    .bar-track{height:10px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden}
+    .bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--lime),#71ff42)}
+    .milestones{display:grid;gap:10px}
+    .milestone{display:flex;justify-content:space-between;gap:10px;padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid var(--line)}
+    .footer-note{margin-top:18px;color:var(--soft);font-size:.88rem;line-height:1.55}
+    .hidden{display:none!important}
+    canvas{max-width:100%}
+    .floating-nav{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:70;padding:10px;border-radius:24px;background:rgba(10,14,11,.86);border:1px solid var(--line);backdrop-filter:blur(18px);box-shadow:var(--shadow);grid-template-columns:repeat(4,1fr);gap:8px;width:min(92vw,560px)}
+    .floating-nav button{min-width:0;padding:10px;border-radius:16px;background:transparent;color:var(--muted);font-size:.72rem;font-weight:800;display:grid;place-items:center;gap:4px}
+    .floating-nav button.active{background:linear-gradient(135deg,var(--lime),#76ff48);color:#091006}
+    /* ── Hamburger Button ── */
+    .hamburger-btn{
+      display:none;flex-direction:column;justify-content:center;gap:5px;
+      width:44px;height:44px;padding:10px;border-radius:14px;
+      background:var(--surface-2);border:1px solid var(--line);cursor:pointer;
+      transition:.2s ease
+    }
+    .hamburger-btn span{
+      display:block;height:2px;border-radius:2px;background:var(--text);
+      transition:.3s ease;transform-origin:center
+    }
+    .hamburger-btn:hover{transform:translateY(-1px)}
+    .hamburger-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+    .hamburger-btn.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+    .hamburger-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+    /* ── Mobile Drawer Overlay ── */
+    .mobile-overlay{
+      display:none;position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.6);
+      backdrop-filter:blur(4px);animation:fadeIn .2s ease
+    }
+    .mobile-overlay.open{display:block}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+    /* ── Mobile Drawer ── */
+    .mobile-drawer{
+      position:fixed;top:0;left:0;bottom:0;z-index:90;
+      width:min(85vw,320px);padding:20px;
+      background:linear-gradient(180deg, rgba(18,26,19,.98), rgba(9,13,10,.98));
+      border-right:1px solid var(--line);box-shadow:40px 0 80px rgba(0,0,0,.5);
+      overflow-y:auto;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1)
+    }
+    .mobile-drawer.open{transform:translateX(0)}
+    .drawer-header{
+      display:flex;align-items:center;justify-content:space-between;
+      margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--line)
+    }
+    .drawer-close{
+      width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.06);
+      border:1px solid var(--line);color:var(--muted);cursor:pointer;
+      display:grid;place-items:center;font-size:16px;transition:.2s ease
+    }
+    .drawer-close:hover{background:rgba(255,107,107,.12);color:var(--danger);border-color:rgba(255,107,107,.2)}
+
+    @media (max-width: 1180px){
+      .layout{grid-template-columns:1fr}
+      .sidebar{display:none}
+      .floating-nav{display:none}
+      .hamburger-btn{display:flex}
+      .app-shell{padding-bottom:24px}
+    }
+    @media (max-width: 980px){
+      .dashboard-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+      .hero-card,.wide-card{grid-column:span 6}
+      .metric-card{grid-column:span 3}
+      .panel-grid{grid-template-columns:1fr}
+      .timeline{grid-template-columns:1fr 1fr}
+      .hero-top{flex-direction:column}
+      .hero-metric{min-width:0;width:100%}
+    }
+    @media (max-width: 720px){
+      .app-shell{padding:12px 12px 24px}
+      .topbar{padding:10px 12px;border-radius:18px}
+      .brand-copy p{display:none}
+      .brand-badge{width:38px;height:38px;font-size:18px}
+      .brand-copy h1{font-size:1rem}
+      .dashboard-grid{grid-template-columns:1fr}
+      .hero-card,.metric-card,.wide-card{grid-column:span 1}
+      .hero,.panel,.card{border-radius:22px}
+      .hero{padding:20px}
+      .hero-title{font-size:clamp(1.6rem,8vw,2.4rem)}
+      .hero-value{font-size:clamp(2rem,10vw,3.5rem)}
+      .field-grid,.stats-grid{grid-template-columns:1fr}
+      .timeline{grid-template-columns:1fr}
+      .result-hero,.value-xl{word-break:break-word}
+      .result-hero{font-size:clamp(2.2rem,10vw,5rem)}
+      .value-xl{font-size:clamp(2.2rem,10vw,4rem)}
+      .segmented{width:100%}
+      .seg-btn,.loan-btn{flex:1;font-size:.8rem;padding:10px 8px}
+      .section-title{font-size:clamp(1.4rem,6vw,2rem)}
+    }
+
+    /* ── Light Mode ── */
+    body.light{
+      --bg:#f0f5f0;--surface:#ffffff;--surface-2:#f4f9f4;--surface-3:#eaf3ea;--card:#ffffff;
+      --line:rgba(60,120,60,.14);--line-strong:rgba(60,120,60,.30);
+      --text:#0d1f0e;--muted:#4a6b4a;--soft:#6a8b6a;
+      --shadow:0 8px 32px rgba(0,0,0,.08);
+    }
+    body.light{background:radial-gradient(circle at top center,rgba(145,255,75,.06),transparent 28%),var(--bg)}
+    body.light .topbar{background:rgba(255,255,255,.88)}
+    body.light .sidebar{background:linear-gradient(180deg,rgba(248,253,248,.98),rgba(240,250,240,.98))}
+    body.light .mobile-drawer{background:linear-gradient(180deg,rgba(248,253,248,.99),rgba(240,250,240,.99));border-right-color:var(--line)}
+    body.light .hero{background:linear-gradient(145deg,rgba(230,248,230,.96),rgba(245,255,245,.98))}
+    body.light .hero::before{background:radial-gradient(circle,rgba(120,200,80,.18),transparent 65%)}
+    body.light .card{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,253,248,.98))}
+    body.light .panel{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,253,248,.98))}
+    body.light .result-card{background:radial-gradient(circle at 84% 14%,rgba(140,220,80,.10),transparent 28%),linear-gradient(160deg,rgba(248,255,248,.98),rgba(240,252,240,.98))}
+    body.light .hero-card{background:radial-gradient(circle at 82% 14%,rgba(140,220,80,.15),transparent 30%),linear-gradient(145deg,rgba(248,255,248,.98),rgba(240,252,240,.98))}
+    body.light input,body.light select{background:rgba(0,0,0,.04);color:var(--text)}
+    body.light input:focus,body.light select:focus{background:rgba(0,0,0,.06)}
+    body.light .nav-btn .nav-icon{background:rgba(0,0,0,.05)}
+    body.light .segmented{background:rgba(0,0,0,.05)}
+    body.light .stat-box,body.light .bar-item,body.light .timeline-step,body.light .milestone{background:rgba(0,0,0,.03)}
+    body.light .progress-track,.bar-track{background:rgba(0,0,0,.08)}
+    body.light table{background:rgba(0,0,0,.01)}
+    body.light th,body.light td{border-bottom-color:rgba(0,0,0,.07)}
+    body.light .table-wrap{border-color:var(--line)}
+    body.light .mini-chip{background:rgba(0,0,0,.05)}
+    body.light .hamburger-btn{background:var(--surface-2)}
+    body.light .hamburger-btn span{background:var(--text)}
+    body.light .mobile-overlay{background:rgba(0,0,0,.4)}
+
+    /* ── Export Button ── */
+    .export-btn{
+      position:fixed;bottom:24px;right:24px;z-index:50;
+      display:grid;place-items:center;
+      width:44px;height:44px;border-radius:14px;border:none;cursor:pointer;
+      background:linear-gradient(135deg,var(--lime),#6cff44);
+      color:#091006;font-size:1.2rem;line-height:1;
+      box-shadow:0 6px 20px rgba(156,255,77,.38);transition:.2s ease;font:inherit
+    }
+    .export-btn:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(156,255,77,.5)}
+    .export-btn:disabled{opacity:.5;cursor:default;transform:none}
+
+    /* ── Wallpaper Export Card (off-screen) ── */
+    #wallpaper-card{
+      position:fixed;left:-9999px;top:0;
+      width:390px;height:844px;
+      padding:52px 30px 44px;
+      display:flex;flex-direction:column;
+      font-family:"Inter","Noto Sans Thai",system-ui,sans-serif;
+      background:
+        radial-gradient(circle at 18% 82%, rgba(120,255,60,.2) 0%, transparent 42%),
+        radial-gradient(circle at 82% 18%, rgba(80,200,40,.10) 0%, transparent 38%),
+        linear-gradient(168deg,#0d1a0e 0%,#070c08 55%,#040907 100%);
+      color:#f6fff0;overflow:hidden;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-badge">
+          <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+            <rect x="2" y="17" width="5" height="7" rx="2" fill="#0d1f0e" opacity=".55"/>
+            <rect x="10" y="11" width="5" height="13" rx="2" fill="#0d1f0e" opacity=".78"/>
+            <rect x="18" y="4" width="5" height="20" rx="2" fill="#0d1f0e"/>
+            <polyline points="4.5,16 12.5,10 20.5,3.5" stroke="#0d1f0e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/>
+          </svg>
+        </div>
+        <div class="brand-copy">
+          <h1 class="brand-name" id="brandTitle"><span class="fin">Fin</span><span class="plan">Planner</span></h1>
+          <p class="brand-tag" id="brandSub">วางแผนการเงินอัจฉริยะ</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="pill-btn" id="themeToggle" title="สลับธีม">☀</button>
+        <button class="pill-btn" id="langToggle">TH</button>
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="เมนู">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Mobile Drawer -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    <nav class="mobile-drawer" id="mobileDrawer">
+      <div class="drawer-header">
+        <div class="brand">
+          <div class="brand-badge">
+            <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+              <rect x="2" y="17" width="5" height="7" rx="2" fill="#0d1f0e" opacity=".55"/>
+              <rect x="10" y="11" width="5" height="13" rx="2" fill="#0d1f0e" opacity=".78"/>
+              <rect x="18" y="4" width="5" height="20" rx="2" fill="#0d1f0e"/>
+              <polyline points="4.5,16 12.5,10 20.5,3.5" stroke="#0d1f0e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/>
+            </svg>
+          </div>
+          <div class="brand-copy">
+            <h1 class="brand-name"><span class="fin">Fin</span><span class="plan">Planner</span></h1>
+          </div>
+        </div>
+        <button class="drawer-close" id="drawerClose">✕</button>
+      </div>
+      <p class="nav-head" data-i18n="navMenu">เมนู</p>
+      <div class="nav-list" id="mobileNav"></div>
+    </nav>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <p class="nav-head" data-i18n="navMenu">Navigation</p>
+        <div class="nav-list" id="sidebarNav"></div>
+      </aside>
+
+      <main class="content">
+        <section class="screen active" id="screen-dashboard">
+          <div class="hero glow">
+            <div class="hero-top">
+              <div>
+                <p class="eyebrow" data-i18n="heroEyebrow">Your money, your routine</p>
+                <h2 class="hero-title"><span data-i18n="heroLine1">Visual progress</span><br><span class="accent" data-i18n="heroLine2">for every financial move</span></h2>
+                <p class="hero-sub" data-i18n="heroSub">Keep the original FinPlanner content, but in a bold app-like experience with quick logging, sharp insights, and clearer navigation.</p>
+              </div>
+              <div class="hero-metric">
+                <span class="mini-chip" id="dashboardStatusChip">● Live Dashboard</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid dashboard-grid">
+            <article class="card hero-card">
+              <div>
+                <div class="label" data-i18n="netWorth">Net Worth</div>
+                <div class="value-xl" id="dash-networth">0</div>
+                <div class="card-sub" data-i18n="dashSummary">A clean snapshot of your total assets minus liabilities.</div>
+              </div>
+              <div class="progress-wrap">
+                <div class="mini-chip" id="dash-networth-chip">Dashboard</div>
+              </div>
+            </article>
+            <article class="card metric-card">
+              <div style="display:flex;justify-content:space-between;gap:10px;align-items:start">
+                <div class="label" data-i18n="emergencyFund">Emergency Fund</div>
+                <span class="status-badge" id="dash-liquid-badge">-</span>
+              </div>
+              <div class="value-lg" id="dash-liquid">0</div>
+              <div class="card-sub"><span data-i18n="months">months</span></div>
+            </article>
+            <article class="card metric-card">
+              <div style="display:flex;justify-content:space-between;gap:10px;align-items:start">
+                <div class="label" data-i18n="debtRatio">Debt Ratio</div>
+                <span class="status-badge" id="dash-debt-badge">-</span>
+              </div>
+              <div class="value-lg" id="dash-debt">0%</div>
+              <div class="card-sub">Debt-to-Income</div>
+            </article>
+            <article class="card wide-card">
+              <div style="display:flex;justify-content:space-between;gap:12px;align-items:start">
+                <div>
+                  <div class="label" data-i18n="retireProgress">Retirement Goal</div>
+                  <div class="value-lg"><span id="dash-retire-current">0</span> / <span id="dash-retire-target">0</span></div>
+                </div>
+                <div class="status-badge status-ok" id="dash-retire-pct">0%</div>
+              </div>
+              <div class="progress-wrap">
+                <div class="progress-track"><div class="progress-bar" id="dash-retire-bar"></div></div>
+              </div>
+            </article>
+            <article class="card metric-card">
+              <div class="label" data-i18n="taxEstimate">Tax Estimate</div>
+              <div class="value-lg" id="dash-tax">0</div>
+              <div class="card-sub" data-i18n="thbPerYear">THB / yr</div>
+            </article>
+            <article class="card metric-card">
+              <div class="label" data-i18n="monthlyLoan">Monthly Loan</div>
+              <div class="value-lg" id="dash-loan">0</div>
+              <div class="card-sub" data-i18n="thbPerMonth">THB / mo</div>
+            </article>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-prep">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title" data-i18n="prep">Investment Prep</h2>
+              <p class="section-sub" data-i18n="prepSub">Assess your goal and estimate how much more to save each month.</p>
+            </div>
+          </div>
+          <div class="panel-grid">
+            <div class="panel">
+              <div class="panel-title">
+                <div>
+                  <h3 data-i18n="prepInputTitle">Goal Setup</h3>
+                  <p data-i18n="prepInputSub">Enter the same planning details as before.</p>
+                </div>
+              </div>
+              <div class="field-grid one">
+                <div class="field">
+                  <label for="prep-target" data-i18n="targetGoal">Target Goal</label>
+                  <input type="number" id="prep-target" value="1000000" step="any">
+                </div>
+                <div class="field">
+                  <label for="prep-current" data-i18n="currentSavings">Current Savings</label>
+                  <input type="number" id="prep-current" value="100000" step="any">
+                </div>
+                <div class="field">
+                  <label for="prep-years" data-i18n="timeframe">Timeframe (Years)</label>
+                  <input type="number" id="prep-years" value="10" step="any">
+                </div>
+              </div>
+            </div>
+            <div class="result-card center">
+              <div class="label" data-i18n="saveAdditional">Save Additional</div>
+              <div class="result-hero" id="prep-monthly-need">0</div>
+              <p class="result-note"><span id="prep-note-text" data-i18n="prepNeedNote">per month to stay on track toward the goal.</span></p>
+              <div id="prep-success-box" class="hidden">
+                <span class="status-badge status-ok" data-i18n="achieved">Achieved</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-retire">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title" data-i18n="retireTab">Retirement Plan</h2>
+              <p class="section-sub" data-i18n="retireSub">Calculate how much retirement capital you need and how much more to save.</p>
+            </div>
+          </div>
+          <div class="panel" style="margin-bottom:18px">
+            <div class="timeline">
+              <div class="timeline-step">
+                <strong data-i18n="timelineNow">Now</strong>
+                <div class="field"><label for="ret-age" data-i18n="currentAge">Current Age</label><input type="number" id="ret-age" value="30" step="any"></div>
+              </div>
+              <div class="timeline-step">
+                <strong data-i18n="timeBeforeRetire">Save Window</strong>
+                <div class="value-md" id="ret-yrs-to-retire">30</div>
+                <p data-i18n="years">years</p>
+              </div>
+              <div class="timeline-step">
+                <strong data-i18n="timelineRetire">Retire</strong>
+                <div class="field"><label for="ret-retire" data-i18n="retireAge">Retire Age</label><input type="number" id="ret-retire" value="60" step="any"></div>
+              </div>
+              <div class="timeline-step">
+                <strong data-i18n="timeInRetire">Retirement Span</strong>
+                <div class="value-md" id="ret-yrs-in-retire">25</div>
+                <p data-i18n="years">years</p>
+              </div>
+              <div class="timeline-step">
+                <strong data-i18n="timelineLife">Life</strong>
+                <div class="field"><label for="ret-life" data-i18n="lifeExpectancy">Life Expectancy</label><input type="number" id="ret-life" value="85" step="any"></div>
+              </div>
+            </div>
+          </div>
+          <div class="panel-grid">
+            <div class="stack">
+              <div class="panel">
+                <div class="panel-title"><div><h3 data-i18n="preRetire">Before Retirement</h3></div></div>
+                <div class="field-grid">
+                  <div class="field"><label for="ret-salary" data-i18n="currentSalary">Current Salary</label><input type="number" id="ret-salary" value="50000" step="any"></div>
+                  <div class="field"><label for="ret-cur-exp" data-i18n="currentExpenses">Current Expenses</label><input type="number" id="ret-cur-exp" value="30000" step="any"></div>
+                  <div class="field"><label for="ret-save" data-i18n="currentSavings">Current Savings</label><input type="number" id="ret-save" value="500000" step="any"></div>
+                  <div class="field"><label for="ret-return" data-i18n="expectedReturn">Expected Return (%)</label><input type="number" id="ret-return" value="7" step="any"></div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-title"><div><h3 data-i18n="postRetire">After Retirement</h3></div></div>
+                <div class="field-grid">
+                  <div class="field"><label for="ret-exp" data-i18n="retExpense">Expense / Month After Retirement</label><input type="number" id="ret-exp" value="25000" step="any"></div>
+                  <div class="field"><label for="ret-inherit" data-i18n="inheritGoal">Inheritance Goal</label><input type="number" id="ret-inherit" value="0" step="any"></div>
+                  <div class="field"><label for="ret-inf" data-i18n="inflation">Inflation (%)</label><input type="number" id="ret-inf" value="3" step="any"></div>
+                  <div class="field"><label for="ret-return-post" data-i18n="returnPostRetire">Return After Retirement (%)</label><input type="number" id="ret-return-post" value="4" step="any"></div>
+                </div>
+              </div>
+            </div>
+            <div class="stack">
+              <div class="result-card">
+                <div class="label" data-i18n="retireFundNeeded">Retirement Fund Needed</div>
+                <div class="result-hero" id="ret-total">0</div>
+                <p class="result-note" data-i18n="retireNeedNote">This is the target capital you should have when retirement starts.</p>
+              </div>
+              <div class="stats-grid">
+                <div class="stat-box"><div class="k" data-i18n="futureExpense">Future Monthly Expense</div><div class="v" id="ret-fv-exp">0</div></div>
+                <div class="stat-box"><div class="k" data-i18n="fvSavings">Savings at Retirement</div><div class="v" id="ret-fv-save">0</div></div>
+                <div class="stat-box"><div class="k" data-i18n="inheritGoalDisplay">Inheritance Goal</div><div class="v" id="ret-inherit-display">0</div></div>
+                <div class="stat-box"><div class="k" data-i18n="currentSurplus">Current Monthly Surplus</div><div class="v" id="ret-surplus-text">0</div></div>
+              </div>
+              <div class="panel result-card center" style="min-height:unset">
+                <div class="label" data-i18n="addSave">Additional Saving</div>
+                <div class="result-hero" id="ret-monthly-save">0</div>
+                <p class="result-note" id="ret-save-note" data-i18n="perMonthLong">per month</p>
+                <div id="ret-goal-ok" class="hidden"><span class="status-badge status-ok" data-i18n="goalAchieved">Goal Achieved</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-tax">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title" data-i18n="taxTab">Tax Calculator</h2>
+              <p class="section-sub" data-i18n="taxSub">Personal income tax with deductions in the same flow as the original page.</p>
+            </div>
+          </div>
+          <div class="panel-grid">
+            <div class="stack">
+              <div class="panel">
+                <div class="panel-title"><div><h3 data-i18n="income">Income</h3></div></div>
+                <div class="field-grid">
+                  <div class="field"><label for="tax-salary" data-i18n="salary">Monthly Salary</label><input type="number" id="tax-salary" value="50000" step="any"></div>
+                  <div class="field"><label for="tax-bonus" data-i18n="bonus">Yearly Bonus</label><input type="number" id="tax-bonus" value="100000" step="any"></div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-title"><div><h3 data-i18n="deductions">Deductions</h3></div></div>
+                <div class="field-grid">
+                  <div class="field"><label for="tax-soc" data-i18n="socialSecurity">Social Security</label><input type="number" id="tax-soc" value="9000" step="any"></div>
+                  <div class="field"><label for="tax-pvd">PVD / กบข.</label><input type="number" id="tax-pvd" value="30000" step="any"></div>
+                  <div class="field"><label for="tax-life" data-i18n="lifeIns">Life Insurance</label><input type="number" id="tax-life" value="20000" step="any"></div>
+                  <div class="field"><label for="tax-health" data-i18n="healthIns">Health Insurance</label><input type="number" id="tax-health" value="0" step="any"></div>
+                  <div class="field"><label for="tax-ssf">SSF</label><input type="number" id="tax-ssf" value="0" step="any"></div>
+                  <div class="field"><label for="tax-rmf">RMF</label><input type="number" id="tax-rmf" value="0" step="any"></div>
+                </div>
+              </div>
+            </div>
+            <div class="result-card">
+              <div class="label" data-i18n="taxSum">Tax Summary</div>
+              <div class="stats-grid" style="width:100%;margin-top:14px;margin-bottom:18px">
+                <div class="stat-box"><div class="k" data-i18n="totalIncome">Total Income</div><div class="v" id="tax-res-inc">0</div></div>
+                <div class="stat-box"><div class="k" data-i18n="totalDed">Total Deductions</div><div class="v" id="tax-res-ded">0</div></div>
+                <div class="stat-box"><div class="k" data-i18n="netIncome">Net Income</div><div class="v" id="tax-res-net">0</div></div>
+                <div class="stat-box"><div class="k" data-i18n="taxPayable">Tax Payable</div><div class="v" id="tax-res-tax">0</div></div>
+              </div>
+              <p class="result-note" data-i18n="taxNote">Progressive tax brackets are applied automatically.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-health">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title" data-i18n="health">Financial Health</h2>
+              <p class="section-sub" data-i18n="healthSub">Analyze net worth, liquidity, and debt pressure.</p>
+            </div>
+          </div>
+          <div class="panel-grid">
+            <div class="stack">
+              <div class="panel">
+                <div class="panel-title"><div><h3 data-i18n="balanceSheet">Balance Sheet</h3></div></div>
+                <div class="field-grid">
+                  <div class="field"><label for="hlth-asset" data-i18n="totalAssets">Total Assets</label><input type="number" id="hlth-asset" value="1500000" step="any"></div>
+                  <div class="field"><label for="hlth-liab" data-i18n="totalLiabilities">Total Liabilities</label><input type="number" id="hlth-liab" value="450000" step="any"></div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-title"><div><h3 data-i18n="cashflow">Liquidity</h3></div></div>
+                <div class="field-grid">
+                  <div class="field" style="grid-column:1 / -1"><label for="hlth-liq" data-i18n="liquidAssets">Liquid Assets</label><input type="number" id="hlth-liq" value="150000" step="any"></div>
+                  <div class="field"><label for="hlth-inc" data-i18n="incomeMo">Income / Month</label><input type="number" id="hlth-inc" value="50000" step="any"></div>
+                  <div class="field"><label for="hlth-exp" data-i18n="expenseMo">Expense / Month</label><input type="number" id="hlth-exp" value="30000" step="any"></div>
+                  <div class="field" style="grid-column:1 / -1"><label for="hlth-debt" data-i18n="debtMo">Debt Payment / Month</label><input type="number" id="hlth-debt" value="10000" step="any"></div>
+                </div>
+              </div>
+            </div>
+            <div class="stack">
+              <div class="result-card">
+                <div class="label" data-i18n="netWorth">Net Worth</div>
+                <div class="result-hero" id="hlth-res-nw">0</div>
+                <p class="result-note" data-i18n="healthLead">Core health indicators update instantly as you edit the inputs.</p>
+              </div>
+              <div class="stats-grid">
+                <div class="stat-box">
+                  <div class="k" data-i18n="emergencyFund">Emergency Fund</div>
+                  <div class="v" id="hlth-res-liq">0</div>
+                  <div style="margin-top:10px"><span class="status-badge" id="hlth-res-liq-bdg">-</span></div>
+                </div>
+                <div class="stat-box">
+                  <div class="k" data-i18n="debtRatio">Debt Ratio</div>
+                  <div class="v" id="hlth-res-debt">0</div>
+                  <div style="margin-top:10px"><span class="status-badge" id="hlth-res-debt-bdg">-</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-dca">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title" data-i18n="dcaTab">DCA Chart</h2>
+              <p class="section-sub" data-i18n="dcaSub">Visualize portfolio growth from monthly investing.</p>
+            </div>
+          </div>
+          <div class="panel-grid">
+            <div class="stack">
+              <div class="panel">
+                <div class="panel-title"><div><h3 data-i18n="dcaSetup">Investment Setup</h3></div></div>
+                <div class="field-grid one">
+                  <div class="field"><label for="dca-initial" data-i18n="initialInvest">Initial Investment</label><input type="number" id="dca-initial" value="100000" step="any"></div>
+                  <div class="field"><label for="dca-monthly" data-i18n="dcaMonthly">Monthly Investment</label><input type="number" id="dca-monthly" value="5000" step="any"></div>
+                  <div class="field-grid">
+                    <div class="field"><label for="dca-rate" data-i18n="expectedReturn">Expected Return (%)</label><input type="number" id="dca-rate" value="8" step="any"></div>
+                    <div class="field"><label for="dca-years" data-i18n="timeframe">Timeframe (Years)</label><input type="number" id="dca-years" value="20" min="1" max="50" step="any"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="stats-grid">
+                <div class="stat-box"><div class="k" data-i18n="futureValue">Future Value</div><div class="v" id="dca-res-fv">0</div></div>
+                <div class="stat-box"><div class="k" data-i18n="totalContributed">Total Invested</div><div class="v" id="dca-res-invested">0</div></div>
+                <div class="stat-box"><div class="k" data-i18n="totalGain">Total Gain</div><div class="v" id="dca-res-gain">0</div></div>
+                <div class="stat-box"><div class="k" data-i18n="returnMult">Multiplier</div><div class="v" id="dca-res-mult">0</div></div>
+              </div>
+            </div>
+            <div class="stack">
+              <div class="panel" style="padding:24px">
+                <div class="panel-title"><div><h3 data-i18n="dcaChartTitle">Portfolio Growth Chart</h3></div></div>
+                <div style="position:relative;height:340px"><canvas id="dca-chart"></canvas></div>
+              </div>
+              <div class="panel">
+                <div class="panel-title"><div><h3 data-i18n="dcaTable">Year-by-Year Breakdown</h3></div></div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th data-i18n="yearN">Year</th>
+                        <th data-i18n="totalContributed">Total Invested</th>
+                        <th data-i18n="futureValue">Future Value</th>
+                        <th data-i18n="totalGain">Gain</th>
+                      </tr>
+                    </thead>
+                    <tbody id="dca-table-body"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-invest">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title" data-i18n="invest">Investment Tools</h2>
+              <p class="section-sub" data-i18n="investSub">Calculate compound growth or compare common asset classes.</p>
+            </div>
+            <div class="segmented">
+              <button class="seg-btn active" data-seg-target="compound" data-i18n="segCompound">Compound Interest</button>
+              <button class="seg-btn" data-seg-target="compare" data-i18n="segCompare">Asset Comparison</button>
+            </div>
+          </div>
+          <div class="segment active" id="segment-compound">
+            <div class="panel-grid">
+              <div class="stack">
+                <div class="panel">
+                  <div class="panel-title"><div><h3 data-i18n="compoundCalc">Compound Interest Calculator</h3></div></div>
+                  <div class="field-grid one">
+                    <div class="field"><label for="inv-initial" data-i18n="initialInvest">Initial Investment</label><input type="number" id="inv-initial" value="100000" step="any"></div>
+                    <div class="field"><label for="inv-monthly" data-i18n="monthlyInvest">Monthly Contribution</label><input type="number" id="inv-monthly" value="5000" step="any"></div>
+                    <div class="field-grid">
+                      <div class="field"><label for="inv-rate" data-i18n="expectedReturn">Expected Return (%)</label><input type="number" id="inv-rate" value="8" step="any"></div>
+                      <div class="field"><label for="inv-years" data-i18n="timeframe">Timeframe (Years)</label><input type="number" id="inv-years" value="20" step="any"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="panel">
+                  <div class="panel-title"><div><h3 data-i18n="returnBreakdown">Gain : Principal Ratio</h3></div></div>
+                  <div class="progress-track"><div class="progress-bar" id="inv-gain-bar"></div></div>
+                  <div style="display:flex;justify-content:space-between;gap:14px;margin-top:12px;flex-wrap:wrap">
+                    <div><div class="label" data-i18n="totalContributed">Total Invested</div><div class="value-md" id="inv-total-contrib">0</div></div>
+                    <div><div class="label" data-i18n="totalGain">Total Gain</div><div class="value-md" id="inv-total-gain">0</div></div>
+                    <div><div class="label" data-i18n="gainRatio">Gain Ratio</div><div class="value-md" id="inv-gain-pct">0%</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="stack">
+                <div class="result-card center">
+                  <div class="label" data-i18n="futureValue">Future Value</div>
+                  <div class="result-hero" id="inv-res-fv">0</div>
+                  <p class="result-note" data-i18n="investLead">Your portfolio projection grows from initial capital and recurring contribution.</p>
+                </div>
+                <div class="stats-grid">
+                  <div class="stat-box"><div class="k" data-i18n="totalContributed">Total Invested</div><div class="v" id="inv-res-contrib">0</div></div>
+                  <div class="stat-box"><div class="k" data-i18n="totalGain">Total Gain</div><div class="v" id="inv-res-gain">0</div></div>
+                  <div class="stat-box"><div class="k" data-i18n="returnMult">Multiplier</div><div class="v" id="inv-res-mult">0</div></div>
+                </div>
+                <div class="panel">
+                  <div class="panel-title"><div><h3 data-i18n="milestones">Growth Path</h3></div></div>
+                  <div class="milestones" id="inv-milestones"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="segment" id="segment-compare">
+            <div class="panel-grid">
+              <div class="panel">
+                <div class="panel-title"><div><h3 data-i18n="compareSetup">Set Investment Parameters</h3></div></div>
+                <div class="field-grid one">
+                  <div class="field"><label for="cmp-initial" data-i18n="initialInvest">Initial Investment</label><input type="number" id="cmp-initial" value="100000" step="any"></div>
+                  <div class="field"><label for="cmp-monthly" data-i18n="monthlyInvest">Monthly Contribution</label><input type="number" id="cmp-monthly" value="5000" step="any"></div>
+                  <div class="field"><label for="cmp-years" data-i18n="timeframe">Timeframe (Years)</label><input type="number" id="cmp-years" value="20" step="any"></div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-title"><div><h3 data-i18n="segCompare">Asset Comparison</h3></div></div>
+                <div class="bar-list" id="cmp-result"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-loan">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title" data-i18n="loan">Loan Calculator</h2>
+              <p class="section-sub" data-i18n="loanSub">Calculate monthly payment and the full principal-interest split.</p>
+            </div>
+            <div class="segmented">
+              <button class="loan-btn active" data-loan-type="home" data-i18n="segHome">Home Loan</button>
+              <button class="loan-btn" data-loan-type="car" data-i18n="segCar">Car Loan</button>
+              <button class="loan-btn" data-loan-type="personal" data-i18n="segPersonal">Personal Loan</button>
+            </div>
+          </div>
+          <div class="panel-grid">
+            <div class="stack">
+              <div class="panel">
+                <div class="panel-title"><div><h3 id="loan-seg-label" data-i18n="segHome">Home Loan</h3></div></div>
+                <div class="field-grid one">
+                  <div class="field"><label for="loan-principal" data-i18n="loanPrincipal">Loan Amount</label><input type="number" id="loan-principal" value="3000000" step="any"></div>
+                  <div class="field-grid">
+                    <div class="field"><label for="loan-rate" data-i18n="loanRate">Interest Rate</label><input type="number" id="loan-rate" value="3.5" step="any"></div>
+                    <div class="field"><label for="loan-years" data-i18n="loanTerm">Term</label><input type="number" id="loan-years" value="30" step="any"></div>
+                  </div>
+                  <div class="field"><label for="loan-salary" data-i18n="loanSalary">Monthly Income</label><input type="number" id="loan-salary" value="50000" step="any"></div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-title"><div><h3 data-i18n="loanBreakdown">Interest : Principal Ratio</h3></div></div>
+                <div class="progress-track"><div class="progress-bar" id="loan-int-bar"></div></div>
+                <div style="display:flex;justify-content:space-between;gap:14px;margin-top:12px;flex-wrap:wrap">
+                  <div><div class="label" data-i18n="loanPrincipalLbl">Principal</div><div class="value-md" id="loan-principal-lbl">0</div></div>
+                  <div><div class="label" data-i18n="loanInterestLbl">Total Interest</div><div class="value-md" id="loan-interest-lbl">0</div></div>
+                  <div><div class="label" data-i18n="loanIntRatio">Interest Ratio</div><div class="value-md" id="loan-int-pct">0%</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="stack">
+              <div class="result-card center">
+                <div class="label" data-i18n="monthlyPayment">Monthly Payment</div>
+                <div class="result-hero" id="loan-res-monthly">0</div>
+                <p class="result-note" data-i18n="bahtPerMonth">THB / month</p>
+              </div>
+              <div class="stats-grid">
+                <div class="stat-box"><div class="k" data-i18n="totalPayment">Total Paid</div><div class="v" id="loan-res-total">0</div></div>
+                <div class="stat-box"><div class="k" data-i18n="totalInterest">Total Interest</div><div class="v" id="loan-res-interest">0</div></div>
+                <div class="stat-box"><div class="k" data-i18n="totalPayments">Number of Payments</div><div class="v" id="loan-total-pmts">0</div></div>
+                <div class="stat-box"><div class="k" data-i18n="firstMonthInterest">First Month Interest</div><div class="v" id="loan-first-interest">0</div></div>
+                <div class="stat-box"><div class="k" data-i18n="firstMonthPrincipal">First Month Principal</div><div class="v" id="loan-first-principal">0</div></div>
+              </div>
+              <!-- Risk Assessment Panel -->
+              <div class="panel">
+                <div class="panel-title">
+                  <div>
+                    <h3 data-i18n="loanRiskTitle">Debt Burden Analysis</h3>
+                    <p data-i18n="loanRiskSub">Based on monthly income</p>
+                  </div>
+                  <span class="status-badge" id="loan-risk-badge">-</span>
+                </div>
+                <div style="margin-bottom:10px">
+                  <div style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--soft);margin-bottom:6px">
+                    <span data-i18n="loanDTILabel">Debt-to-Income Ratio</span>
+                    <strong id="loan-dti-pct" style="color:var(--text)">0%</strong>
+                  </div>
+                  <div class="progress-track"><div id="loan-dti-bar" style="height:100%;border-radius:inherit;width:0%;transition:.4s ease"></div></div>
+                </div>
+                <div class="stats-grid" style="margin-bottom:14px">
+                  <div class="stat-box">
+                    <div class="k" data-i18n="loanMonthlyAfter">Remaining / Month</div>
+                    <div class="v" id="loan-remainder">0</div>
+                  </div>
+                  <div class="stat-box">
+                    <div class="k" data-i18n="loanDTIStd">Standard Limit</div>
+                    <div class="v" data-i18n="loanDTIStdVal">≤ 40%</div>
+                  </div>
+                </div>
+                <div class="footer-note" id="loan-advice" style="padding:14px;border-radius:16px;border:1px solid var(--line)"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <nav class="floating-nav" id="floatingNav"></nav>
+    <button class="export-btn" id="exportBtn" onclick="exportWallpaper()" title="Export Wallpaper PNG">⬇</button>
+  </div>
+
+  <!-- ── Wallpaper Export Card (off-screen, captured by html2canvas) ── -->
+  <div id="wallpaper-card">
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;border-radius:13px;background:linear-gradient(145deg,#c8ff6a,#5edf22);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 18px rgba(120,255,60,.4)">
+          <svg width="24" height="24" viewBox="0 0 26 26" fill="none">
+            <rect x="2" y="17" width="5" height="7" rx="2" fill="#0d1f0e" opacity=".55"/>
+            <rect x="10" y="11" width="5" height="13" rx="2" fill="#0d1f0e" opacity=".78"/>
+            <rect x="18" y="4" width="5" height="20" rx="2" fill="#0d1f0e"/>
+          </svg>
+        </div>
+        <div>
+          <div style="font-size:1.1rem;font-weight:900;letter-spacing:-.05em;line-height:1"><span style="color:#b8ff62;font-style:italic">Fin</span><span style="color:#f6fff0">Planner</span></div>
+          <div style="font-size:.62rem;color:#6f8366;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-top:2px">วางแผนการเงินอัจฉริยะ</div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div id="wp-date" style="font-size:.75rem;color:#9ab08f;font-weight:600;line-height:1.4"></div>
+      </div>
+    </div>
+
+    <!-- Net Worth Big Number -->
+    <div style="margin-bottom:28px">
+      <div style="font-size:.65rem;color:#b8ff62;font-weight:800;letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px">ความมั่งคั่งสุทธิ · Net Worth</div>
+      <div id="wp-networth" style="font-size:3.6rem;font-weight:900;letter-spacing:-.07em;line-height:.88;color:#f6fff0;text-shadow:0 0 48px rgba(184,255,98,.18)">0</div>
+      <div style="font-size:.8rem;color:#6f8366;margin-top:10px;font-weight:600">บาท</div>
+    </div>
+
+    <!-- Divider -->
+    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(171,255,96,.2),transparent);margin-bottom:24px"></div>
+
+    <!-- Stats Row 1 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div style="padding:16px 18px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(171,255,96,.1)">
+        <div style="font-size:.6rem;color:#9ab08f;font-weight:800;text-transform:uppercase;letter-spacing:.14em;margin-bottom:8px">เงินสำรองฉุกเฉิน</div>
+        <div id="wp-liquid" style="font-size:1.45rem;font-weight:900;letter-spacing:-.04em;color:#f6fff0">0</div>
+        <div style="margin-top:8px"><span id="wp-liquid-badge" style="font-size:.62rem;font-weight:800;padding:3px 9px;border-radius:99px;background:rgba(128,237,153,.12);color:#80ed99;border:1px solid rgba(128,237,153,.2)">-</span></div>
+      </div>
+      <div style="padding:16px 18px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(171,255,96,.1)">
+        <div style="font-size:.6rem;color:#9ab08f;font-weight:800;text-transform:uppercase;letter-spacing:.14em;margin-bottom:8px">ภาระหนี้สิน</div>
+        <div id="wp-debt" style="font-size:1.45rem;font-weight:900;letter-spacing:-.04em;color:#f6fff0">0%</div>
+        <div style="margin-top:8px"><span id="wp-debt-badge" style="font-size:.62rem;font-weight:800;padding:3px 9px;border-radius:99px;background:rgba(128,237,153,.12);color:#80ed99;border:1px solid rgba(128,237,153,.2)">-</span></div>
+      </div>
+    </div>
+
+    <!-- Retirement Progress -->
+    <div style="padding:18px 20px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(171,255,96,.1);margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:.6rem;color:#9ab08f;font-weight:800;text-transform:uppercase;letter-spacing:.14em">เป้าหมายเกษียณ</div>
+        <div id="wp-retire-pct" style="font-size:.9rem;font-weight:900;color:#b8ff62">0%</div>
+      </div>
+      <div style="height:8px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden;margin-bottom:12px">
+        <div id="wp-retire-bar" style="height:100%;border-radius:999px;background:linear-gradient(90deg,#b8ff62,#6cff44);width:0%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:.75rem;color:#6f8366;font-weight:600">
+        <span id="wp-retire-current">0</span>
+        <span id="wp-retire-target">0</span>
+      </div>
+    </div>
+
+    <!-- Stats Row 2 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div style="padding:16px 18px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(171,255,96,.1)">
+        <div style="font-size:.6rem;color:#9ab08f;font-weight:800;text-transform:uppercase;letter-spacing:.14em;margin-bottom:8px">ประมาณการภาษี</div>
+        <div id="wp-tax" style="font-size:1.3rem;font-weight:900;letter-spacing:-.04em;color:#f6fff0">0</div>
+        <div style="font-size:.65rem;color:#6f8366;margin-top:5px;font-weight:600">บาทต่อปี</div>
+      </div>
+      <div style="padding:16px 18px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(171,255,96,.1)">
+        <div style="font-size:.6rem;color:#9ab08f;font-weight:800;text-transform:uppercase;letter-spacing:.14em;margin-bottom:8px">ผ่อนต่อเดือน</div>
+        <div id="wp-loan" style="font-size:1.3rem;font-weight:900;letter-spacing:-.04em;color:#f6fff0">0</div>
+        <div style="font-size:.65rem;color:#6f8366;margin-top:5px;font-weight:600">บาทต่อเดือน</div>
+      </div>
+    </div>
+
+    <!-- Spacer -->
+    <div style="flex:1"></div>
+
+    <!-- Footer -->
+    <div style="margin-top:28px;padding-top:18px;border-top:1px solid rgba(171,255,96,.1);display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:.65rem;color:#3d5c3d;font-weight:700;letter-spacing:.06em">FINPLANNER</div>
+      <div id="wp-footer-date" style="font-size:.65rem;color:#3d5c3d;font-weight:600"></div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      lang: 'th',
+      activeScreen: 'dashboard',
+      activeInvestSegment: 'compound',
+      activeLoanType: 'home',
+      dcaChart: null,
+      finData: {
+        assets: 1500000,
+        liabilities: 450000,
+        liquidMonths: 5,
+        debtRatio: 25,
+        retireTarget: 0,
+        retireCurrent: 500000,
+        taxEstimate: 0,
+        loanMonthly: 0,
+      }
+    };
+
+    const navItems = [
+      { id:'dashboard', icon:'◉', title:'dashboard', sub:'navDashSub' },
+      { id:'prep', icon:'✦', title:'prep', sub:'navPrepSub' },
+      { id:'retire', icon:'◎', title:'retireTab', sub:'navRetireSub' },
+      { id:'tax', icon:'▣', title:'taxTab', sub:'navTaxSub' },
+      { id:'health', icon:'▲', title:'health', sub:'navHealthSub' },
+      { id:'dca', icon:'↗', title:'dcaTab', sub:'navDcaSub' },
+      { id:'invest', icon:'◫', title:'invest', sub:'navInvestSub' },
+      { id:'loan', icon:'◌', title:'loan', sub:'navLoanSub' },
+    ];
+
+    const translations = {
+      th: {
+        navMenu:'เมนู', dashboard:'ภาพรวม', prep:'เตรียมพร้อมก่อนลงทุน', retireTab:'วางแผนเกษียณ', taxTab:'คำนวณภาษี', health:'เช็คสุขภาพการเงิน', dcaTab:'กราฟ DCA', invest:'ตัวช่วยการลงทุน', loan:'คำนวณสินเชื่อ',
+        navDashSub:'ดูสรุปภาพรวม', navPrepSub:'ประเมินเป้าหมาย', navRetireSub:'คำนวณทุนเกษียณ', navTaxSub:'คำนวณภาษีบุคคล', navHealthSub:'ดูสภาพการเงิน', navDcaSub:'ติดตามการเติบโต', navInvestSub:'คำนวณผลตอบแทน', navLoanSub:'ผ่อนชำระสินเชื่อ',
+        heroEyebrow:'เงินของคุณในจังหวะที่คุมได้', heroLine1:'เห็นความคืบหน้า', heroLine2:'ของทุกการเงินแบบชัดๆ', heroSub:'คงเนื้อหาเดิมของ FinPlanner แต่เปลี่ยนเป็นหน้าตาแนวแอปเข้ม-เขียวแบบในเรฟ พร้อมการนำทางที่ชัดขึ้นและใช้งานลื่นขึ้น',
+        netWorth:'ความมั่งคั่งสุทธิ', emergencyFund:'เงินสำรองฉุกเฉิน', debtRatio:'ภาระหนี้สิน', retireProgress:'เป้าหมายเกษียณ', taxEstimate:'ประมาณการภาษี', monthlyLoan:'ภาระผ่อนต่อเดือน',
+        dashSummary:'ภาพรวมของสินทรัพย์รวมลบหนี้สินรวมแบบอ่านง่าย', dashLead:'ภาพรวมของตัวเลขสำคัญที่อัปเดตจากทุกแท็บแบบทันที', dashStatus:'พร้อมใช้งาน',
+        prepSub:'ประเมินเป้าหมายและคำนวณเงินที่ควรออมเพิ่มต่อเดือน', prepInputTitle:'ตั้งค่าเป้าหมาย', prepInputSub:'ใส่ข้อมูลแผนเดิมได้เหมือนเดิม', targetGoal:'เป้าหมายเงินออม', currentSavings:'เงินออมปัจจุบัน', timeframe:'ระยะเวลา (ปี)', saveAdditional:'ควรออมเพิ่ม', achieved:'ถึงเป้าหมายแล้ว', prepNeedNote:'ต่อเดือนเพื่อให้ไปถึงเป้าหมาย',
+        retireSub:'คำนวณเงินที่ต้องมีตอนเกษียณ และดูว่าต้องออมเพิ่มอีกเท่าไร', timelineNow:'ตอนนี้', timeBeforeRetire:'ช่วงเวลาที่เก็บเงิน', timelineRetire:'เกษียณ', timeInRetire:'ช่วงใช้เงินหลังเกษียณ', timelineLife:'อายุขัย', currentAge:'อายุปัจจุบัน', retireAge:'อายุเกษียณ', lifeExpectancy:'อายุขัย', years:'ปี', preRetire:'ช่วงก่อนเกษียณ', postRetire:'ช่วงหลังเกษียณ', currentSalary:'เงินเดือนปัจจุบัน', currentExpenses:'ค่าใช้จ่ายปัจจุบัน', expectedReturn:'ผลตอบแทน (%)', retExpense:'รายจ่าย/เดือน หลังเกษียณ', inheritGoal:'มรดกที่ต้องการ', inflation:'เงินเฟ้อ (%)', returnPostRetire:'ผลตอบแทนหลังเกษียณ (%)', retireFundNeeded:'ทุนเกษียณที่ต้องเตรียม', retireNeedNote:'นี่คือเงินก้อนเป้าหมายที่ควรมีในวันที่เริ่มเกษียณ', futureExpense:'รายจ่ายจริงในอนาคต', fvSavings:'เงินออมตอนเกษียณ', inheritGoalDisplay:'มรดกเป้าหมาย', currentSurplus:'เงินเหลือ/เดือน ปัจจุบัน', addSave:'ต้องออมเพิ่ม', goalAchieved:'ทุนเพียงพอแล้ว', perMonthLong:'บาทต่อเดือน',
+        taxSub:'คำนวณภาษีเงินได้บุคคลธรรมดาพร้อมค่าลดหย่อนหลัก', income:'รายได้', salary:'เงินเดือนต่อเดือน', bonus:'โบนัสต่อปี', deductions:'ค่าลดหย่อน', socialSecurity:'ประกันสังคม', lifeIns:'ประกันชีวิต', healthIns:'ประกันสุขภาพ', taxSum:'สรุปภาษี', totalIncome:'รายได้รวม', totalDed:'ลดหย่อนรวม', netIncome:'เงินได้สุทธิ', taxPayable:'ภาษีที่ต้องจ่าย', taxNote:'ใช้ขั้นบันไดภาษีแบบอัตโนมัติ',
+        healthSub:'วิเคราะห์งบดุล สภาพคล่อง และแรงกดดันจากหนี้', balanceSheet:'งบดุล', totalAssets:'สินทรัพย์รวม', totalLiabilities:'หนี้สินรวม', cashflow:'สภาพคล่อง', liquidAssets:'สินทรัพย์สภาพคล่อง', incomeMo:'รายได้/เดือน', expenseMo:'รายจ่าย/เดือน', debtMo:'ภาระหนี้/เดือน', healthLead:'ตัวชี้วัดสุขภาพการเงินจะอัปเดตทันทีเมื่อแก้ค่าด้านซ้าย',
+        dcaSub:'ดูการเติบโตของพอร์ตจากการลงทุนแบบ DCA', dcaSetup:'ตั้งค่าการลงทุน', initialInvest:'เงินลงทุนเริ่มต้น', dcaMonthly:'ลงทุนเพิ่มต่อเดือน', dcaChartTitle:'กราฟเติบโตของพอร์ต', dcaTable:'ตารางรายปี', futureValue:'มูลค่าสุดท้าย', totalContributed:'เงินลงทุนรวม', totalGain:'กำไร', returnMult:'ตัวคูณ', yearN:'ปี',
+        investSub:'คำนวณดอกเบี้ยทบต้นหรือเปรียบเทียบสินทรัพย์', segCompound:'ดอกเบี้ยทบต้น', segCompare:'เปรียบเทียบสินทรัพย์', compoundCalc:'คำนวณดอกเบี้ยทบต้น', monthlyInvest:'ออมเพิ่มต่อเดือน', returnBreakdown:'สัดส่วนกำไร : เงินลงทุน', gainRatio:'สัดส่วนกำไร', milestones:'เส้นทางการเติบโต', compareSetup:'ตั้งค่าเงื่อนไข', investLead:'พอร์ตประมาณการจะโตจากเงินต้นและการออมรายเดือน',
+        loanSub:'คำนวณยอดผ่อนต่อเดือนและภาพรวมดอกเบี้ย', segHome:'สินเชื่อบ้าน', segCar:'สินเชื่อรถ', segPersonal:'สินเชื่อบุคคล', loanPrincipal:'วงเงินกู้', loanRate:'ดอกเบี้ย (%/ปี)', loanTerm:'ระยะเวลา (ปี)', loanSalary:'รายได้ต่อเดือน', loanBreakdown:'สัดส่วนดอกเบี้ย : เงินต้น', loanPrincipalLbl:'เงินต้น', loanInterestLbl:'ดอกเบี้ยรวม', loanIntRatio:'สัดส่วนดอกเบี้ย', monthlyPayment:'ผ่อนต่อเดือน', bahtPerMonth:'บาทต่อเดือน', totalPayment:'จ่ายทั้งหมด', totalInterest:'ดอกเบี้ยรวม', totalPayments:'จำนวนงวด', firstMonthInterest:'ดอกเบี้ยเดือนแรก', firstMonthPrincipal:'เงินต้นเดือนแรก',
+        loanRiskTitle:'วิเคราะห์ภาระหนี้', loanRiskSub:'เทียบกับรายได้ต่อเดือน', loanDTILabel:'สัดส่วนหนี้ต่อรายได้ (DSR)', loanMonthlyAfter:'เหลือหลังผ่อน / เดือน', loanDTIStd:'เกณฑ์มาตรฐาน', loanDTIStdVal:'≤ 40%',
+        riskSafe:'ปลอดภัย', riskCaution:'ระวัง', riskWarn:'เสี่ยง', riskDanger:'อันตราย',
+        adviceSafe:'✓ ภาระหนี้อยู่ในระดับต่ำ สัดส่วนไม่เกิน 25% ของรายได้ คุณยังมีเงินเหลือพอสำหรับค่าใช้จ่ายและการออม แนะนำออมส่วนที่เหลือเพื่อสร้างกองทุนฉุกเฉินหรือลงทุนระยะยาว',
+        adviceCaution:'⚠ ภาระหนี้ปานกลาง สัดส่วน 25–35% ธนาคารส่วนใหญ่ยังอนุมัติได้ แต่ควรหลีกเลี่ยงการก่อหนี้ใหม่ และมุ่งปลดหนี้ที่มีดอกเบี้ยสูงก่อน',
+        adviceWarn:'⚠ ภาระหนี้ค่อนข้างสูง สัดส่วน 35–45% อาจกระทบสภาพคล่องในชีวิตประจำวัน แนะนำทบทวนค่าใช้จ่ายที่ตัดได้ หรือหาทางเพิ่มรายได้ก่อนตัดสินใจกู้',
+        adviceDanger:'✗ ภาระหนี้สูงเกินไป สัดส่วนเกิน 45% ของรายได้ มีความเสี่ยงผิดนัดชำระสูง สถาบันการเงินมักไม่อนุมัติ แนะนำลดวงเงินกู้ ขยายระยะผ่อน หรือเพิ่มรายได้ก่อนกู้',
+        months:'เดือน', statusExcellent:'ดีมาก', statusFair:'พอใช้', statusSafe:'ปลอดภัย', statusAlert:'เสี่ยง', liveDashboard:'แดชบอร์ดสด', start:'เริ่มต้น', yr:'ปี', thb:'บาท', periods:'งวด',
+        thbPerYear:'บาทต่อปี', thbPerMonth:'บาทต่อเดือน',
+        savingsAccount:'บัญชีออมทรัพย์', bonds:'พันธบัตร / ตราสารหนี้', balancedFund:'กองทุนผสม', equityFund:'หุ้น / กองทุนหุ้น', avgReturn:'ผลตอบแทนเฉลี่ย', gain:'กำไร'
+      },
+      en: {
+        navMenu:'Navigation', dashboard:'Dashboard', prep:'Investment Prep', retireTab:'Retirement Plan', taxTab:'Tax Calculator', health:'Financial Health', dcaTab:'DCA Chart', invest:'Investment Tools', loan:'Loan Calculator',
+        navDashSub:'Overview snapshot', navPrepSub:'Goal estimation', navRetireSub:'Retirement target', navTaxSub:'Personal income tax', navHealthSub:'Health metrics', navDcaSub:'Portfolio growth', navInvestSub:'Return calculator', navLoanSub:'Loan repayment',
+        heroEyebrow:'Your money, in your rhythm', heroLine1:'Visual progress', heroLine2:'for every financial move', heroSub:'The original FinPlanner content stays, but the interface is rebuilt into a sharper black-and-lime product style inspired by the reference.',
+        netWorth:'Net Worth', emergencyFund:'Emergency Fund', debtRatio:'Debt Ratio', retireProgress:'Retirement Goal', taxEstimate:'Tax Estimate', monthlyLoan:'Monthly Loan',
+        dashSummary:'A simple snapshot of total assets minus total liabilities.', dashLead:'Key financial numbers update instantly from every calculator.', dashStatus:'Ready',
+        prepSub:'Assess your goal and estimate how much more to save each month.', prepInputTitle:'Goal Setup', prepInputSub:'Use the same original planning inputs.', targetGoal:'Target Goal', currentSavings:'Current Savings', timeframe:'Timeframe (Years)', saveAdditional:'Save Additional', achieved:'Achieved', prepNeedNote:'per month to stay on track',
+        retireSub:'Calculate retirement capital and the extra monthly saving you still need.', timelineNow:'Now', timeBeforeRetire:'Save Window', timelineRetire:'Retire', timeInRetire:'Retirement Span', timelineLife:'Life', currentAge:'Current Age', retireAge:'Retire Age', lifeExpectancy:'Life Expectancy', years:'years', preRetire:'Before Retirement', postRetire:'After Retirement', currentSalary:'Current Salary', currentExpenses:'Current Expenses', expectedReturn:'Expected Return (%)', retExpense:'Expense / Month After Retirement', inheritGoal:'Inheritance Goal', inflation:'Inflation (%)', returnPostRetire:'Return After Retirement (%)', retireFundNeeded:'Retirement Fund Needed', retireNeedNote:'This is the target capital you should have when retirement begins.', futureExpense:'Future Monthly Expense', fvSavings:'Savings at Retirement', inheritGoalDisplay:'Inheritance Goal', currentSurplus:'Current Monthly Surplus', addSave:'Additional Saving', goalAchieved:'Goal Achieved', perMonthLong:'THB per month',
+        taxSub:'Calculate personal income tax with core deduction items.', income:'Income', salary:'Monthly Salary', bonus:'Yearly Bonus', deductions:'Deductions', socialSecurity:'Social Security', lifeIns:'Life Insurance', healthIns:'Health Insurance', taxSum:'Tax Summary', totalIncome:'Total Income', totalDed:'Total Deductions', netIncome:'Net Income', taxPayable:'Tax Payable', taxNote:'Progressive tax brackets are applied automatically.',
+        healthSub:'Analyze balance sheet strength, liquidity, and debt pressure.', balanceSheet:'Balance Sheet', totalAssets:'Total Assets', totalLiabilities:'Total Liabilities', cashflow:'Liquidity', liquidAssets:'Liquid Assets', incomeMo:'Income / Month', expenseMo:'Expense / Month', debtMo:'Debt Payment / Month', healthLead:'The health indicators respond instantly when the inputs change.',
+        dcaSub:'Visualize portfolio growth from monthly DCA investing.', dcaSetup:'Investment Setup', initialInvest:'Initial Investment', dcaMonthly:'Monthly Investment', dcaChartTitle:'Portfolio Growth Chart', dcaTable:'Year-by-Year Breakdown', futureValue:'Future Value', totalContributed:'Total Invested', totalGain:'Total Gain', returnMult:'Multiplier', yearN:'Year',
+        investSub:'Calculate compound growth or compare common asset classes.', segCompound:'Compound Interest', segCompare:'Asset Comparison', compoundCalc:'Compound Interest Calculator', monthlyInvest:'Monthly Contribution', returnBreakdown:'Gain : Principal Ratio', gainRatio:'Gain Ratio', milestones:'Growth Path', compareSetup:'Set Investment Parameters', investLead:'Your projection grows from initial capital and recurring contribution.',
+        loanSub:'Calculate monthly payment and the full principal-interest split.', segHome:'Home Loan', segCar:'Car Loan', segPersonal:'Personal Loan', loanPrincipal:'Loan Amount', loanRate:'Interest Rate (% / yr)', loanTerm:'Term (Years)', loanSalary:'Monthly Income', loanBreakdown:'Interest : Principal Ratio', loanPrincipalLbl:'Principal', loanInterestLbl:'Total Interest', loanIntRatio:'Interest Ratio', monthlyPayment:'Monthly Payment', bahtPerMonth:'THB / month', totalPayment:'Total Paid', totalInterest:'Total Interest', totalPayments:'Number of Payments', firstMonthInterest:'First Month Interest', firstMonthPrincipal:'First Month Principal',
+        loanRiskTitle:'Debt Burden Analysis', loanRiskSub:'Based on monthly income', loanDTILabel:'Debt-to-Income Ratio (DSR)', loanMonthlyAfter:'Remaining / Month', loanDTIStd:'Standard Limit', loanDTIStdVal:'≤ 40%',
+        riskSafe:'Safe', riskCaution:'Caution', riskWarn:'At Risk', riskDanger:'Danger',
+        adviceSafe:'✓ Healthy debt load under 25% of income. You have ample room for expenses and savings. Consider investing the surplus to build long-term wealth.',
+        adviceCaution:'⚠ Moderate debt load at 25–35%. Most lenders will still approve, but avoid taking on new debt. Focus on repaying high-interest obligations first.',
+        adviceWarn:'⚠ High debt load at 35–45%. Daily cash flow may feel tight. Review discretionary spending and explore ways to increase income before committing.',
+        adviceDanger:'✗ Debt load exceeds 45% of income — very high default risk. Most lenders will decline this application. Consider reducing the loan amount, extending the term, or growing income first.',
+        months:'months', statusExcellent:'Excellent', statusFair:'Fair', statusSafe:'Safe', statusAlert:'Alert', liveDashboard:'Live Dashboard', start:'Start', yr:'Yr', thb:'THB', periods:'payments',
+        thbPerYear:'THB / yr', thbPerMonth:'THB / mo',
+        savingsAccount:'Savings Account', bonds:'Bonds', balancedFund:'Balanced Fund', equityFund:'Stocks / Equity Fund', avgReturn:'Avg. Return', gain:'Gain'
+      }
+    };
+
+    const loanDefaults = {
+      home: { principal: 3000000, rate: 3.5, years: 30 },
+      car: { principal: 800000, rate: 4.5, years: 7 },
+      personal: { principal: 200000, rate: 12, years: 3 }
+    };
+
+    // Remove trailing zeros: 1.50 → "1.5", 1.00 → "1"
+    const sf = v => parseFloat(v.toFixed(2)).toString();
+    // Strip trailing zeros: 5.0 → "5", 5.5 → "5.5"
+    const trim1 = v => parseFloat(v.toFixed(1)).toString();
+    const moneyFull = num => {
+      const n = Number(num)||0;
+      const hasDec = n % 1 !== 0;
+      return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: hasDec ? 2 : 0 });
+    };
+    const moneyCompact = num => {
+      const n = Number(num)||0;
+      const abs = Math.abs(n);
+      if(abs >= 1e9) return sf(n/1e9) + 'B';
+      if(abs >= 1e5) return sf(n/1e6) + (state.lang === 'th' ? ' ล้าน' : 'M');
+      return moneyFull(n);
+    };
+    const getVal = id => {
+      const el = document.getElementById(id);
+      if(!el) return 0;
+      const v = parseFloat((el.value||'').replace(/,/g,''));
+      return Number.isFinite(v) ? v : 0;
+    };
+
+    // Format number with commas for display in inputs
+    const formatNum = n => {
+      if(!Number.isFinite(n)) return '';
+      const neg = n < 0;
+      const s = Math.abs(n).toString();
+      const parts = s.split('.');
+      parts[0] = parseInt(parts[0]||'0').toLocaleString('en-US');
+      return (neg ? '-' : '') + parts.join('.');
+    };
+
+    function initNumericInputs(){
+      document.querySelectorAll('input[type="number"]').forEach(input => {
+        const raw = parseFloat(input.value);
+        input.type = 'text';
+        input.inputMode = 'decimal';
+        if(Number.isFinite(raw)) input.value = formatNum(raw);
+        input.addEventListener('input', () => {
+          const curFromEnd = input.value.length - (input.selectionStart||0);
+          const stripped = input.value.replace(/,/g,'');
+          if(!/^-?\d*\.?\d*$/.test(stripped)){ input.value = stripped.replace(/[^0-9.\-]/g,''); return; }
+          const parts = stripped.split('.');
+          const neg = parts[0].startsWith('-');
+          const absInt = parts[0].replace('-','');
+          if(absInt === '' && parts.length === 1){ input.value = neg ? '-' : ''; return; }
+          const fmtInt = absInt ? parseInt(absInt).toLocaleString('en-US') : '0';
+          let newVal = (neg ? '-' : '') + fmtInt;
+          if(parts.length > 1) newVal += '.' + parts[1];
+          input.value = newVal;
+          const newPos = Math.max(0, newVal.length - curFromEnd);
+          try{ input.setSelectionRange(newPos, newPos); }catch(e){}
+        });
+      });
+    }
+    const clamp = (v, min=0, max=Infinity) => Math.min(max, Math.max(min, v));
+    const t = key => translations[state.lang][key] || key;
+
+    function renderNav(){
+      const sidebar = document.getElementById('sidebarNav');
+      const mobileNav = document.getElementById('mobileNav');
+      const navHTML = navItems.map(item => `
+        <button class="nav-btn ${state.activeScreen===item.id?'active':''}" data-nav="${item.id}">
+          <span class="nav-icon">${item.icon}</span>
+          <span class="nav-copy"><strong>${t(item.title)}</strong><small>${t(item.sub)}</small></span>
+        </button>`).join('');
+      sidebar.innerHTML = navHTML;
+      mobileNav.innerHTML = navHTML;
+      document.querySelectorAll('[data-nav]').forEach(btn => btn.addEventListener('click', () => switchScreen(btn.dataset.nav)));
+    }
+
+    function switchScreen(id){
+      state.activeScreen = id;
+      document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === `screen-${id}`));
+      renderNav();
+      closeMobileDrawer();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function openMobileDrawer(){
+      document.getElementById('mobileDrawer').classList.add('open');
+      document.getElementById('mobileOverlay').classList.add('open');
+      document.getElementById('hamburgerBtn').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMobileDrawer(){
+      document.getElementById('mobileDrawer').classList.remove('open');
+      document.getElementById('mobileOverlay').classList.remove('open');
+      document.getElementById('hamburgerBtn').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    function updateLanguage(){
+      document.getElementById('langToggle').textContent = state.lang === 'th' ? 'EN' : 'TH';
+      document.getElementById('brandSub').textContent = state.lang === 'th' ? 'วางแผนการเงินอัจฉริยะ' : 'Smart Financial Planning';
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if(translations[state.lang][key]) el.textContent = translations[state.lang][key];
+      });
+      renderNav();
+      calcPrep(); calcRetire(); calcTax(); calcHealth(); calcDCA(); calcInvest(); calcCompare(); calcLoan(); updateDashboard();
+    }
+
+    function bindInput(ids, fn){ ids.forEach(id => document.getElementById(id)?.addEventListener('input', fn)); }
+
+    function setStatusBadge(el, type, text){
+      el.className = `status-badge ${type}`;
+      el.textContent = text;
+    }
+
+    function calcPrep(){
+      const target = getVal('prep-target');
+      const current = getVal('prep-current');
+      const years = getVal('prep-years');
+      const months = years > 0 ? years * 12 : 0;
+      const needed = months > 0 ? Math.max(0, (target - current) / months) : 0;
+      const achieved = current >= target && target > 0;
+      document.getElementById('prep-monthly-need').textContent = achieved ? moneyCompact(0) : moneyCompact(needed);
+      document.getElementById('prep-success-box').classList.toggle('hidden', !achieved);
+      document.getElementById('prep-note-text').textContent = achieved ? t('achieved') : t('prepNeedNote');
+    }
+
+    function calcRetire(){
+      const age = getVal('ret-age');
+      const retire = getVal('ret-retire');
+      const life = getVal('ret-life');
+      const exp = getVal('ret-exp');
+      const save = getVal('ret-save');
+      const retPre = getVal('ret-return');
+      const retPost = getVal('ret-return-post');
+      const inf = getVal('ret-inf');
+      const salary = getVal('ret-salary');
+      const curExp = getVal('ret-cur-exp');
+      const inherit = getVal('ret-inherit');
+      const yrsToRetire = Math.max(0, retire - age);
+      const yrsInRetire = Math.max(0, life - retire);
+      const monthsToRetire = yrsToRetire * 12;
+      document.getElementById('ret-yrs-to-retire').textContent = yrsToRetire;
+      document.getElementById('ret-yrs-in-retire').textContent = yrsInRetire;
+      const fvExp = exp * Math.pow(1 + inf / 100, yrsToRetire);
+      const rPost = retPost / 100;
+      let corpusNeeded = 0;
+      if(yrsInRetire > 0){
+        corpusNeeded = rPost > 0 ? fvExp * 12 * (1 - Math.pow(1 + rPost, -yrsInRetire)) / rPost : fvExp * 12 * yrsInRetire;
+      }
+      if(inherit > 0){
+        corpusNeeded += rPost > 0 ? inherit / Math.pow(1 + rPost, yrsInRetire) : inherit;
+      }
+      const fvSave = save * Math.pow(1 + retPre / 100, yrsToRetire);
+      const shortfall = Math.max(0, corpusNeeded - fvSave);
+      const mRate = (retPre / 100) / 12;
+      let mSave = 0;
+      if(monthsToRetire > 0){
+        mSave = mRate > 0 ? (shortfall * mRate) / (Math.pow(1 + mRate, monthsToRetire) - 1) : shortfall / monthsToRetire;
+      }
+      const surplus = salary - curExp;
+      document.getElementById('ret-total').textContent = moneyCompact(corpusNeeded);
+      document.getElementById('ret-fv-exp').textContent = moneyCompact(fvExp);
+      document.getElementById('ret-fv-save').textContent = moneyCompact(fvSave);
+      document.getElementById('ret-inherit-display').textContent = moneyCompact(inherit);
+      document.getElementById('ret-surplus-text').textContent = moneyCompact(surplus);
+      document.getElementById('ret-surplus-text').style.color = surplus >= 0 ? 'var(--ok)' : 'var(--danger)';
+      document.getElementById('ret-monthly-save').textContent = moneyCompact(mSave);
+      document.getElementById('ret-goal-ok').classList.toggle('hidden', mSave > 0.5 || corpusNeeded === 0);
+      state.finData.retireTarget = corpusNeeded;
+      state.finData.retireCurrent = save;
+      updateDashboard();
+    }
+
+    function calcTax(){
+      const salary = getVal('tax-salary');
+      const bonus = getVal('tax-bonus');
+      const soc = getVal('tax-soc');
+      const pvd = getVal('tax-pvd');
+      const life = getVal('tax-life');
+      const health = getVal('tax-health');
+      const ssf = getVal('tax-ssf');
+      const rmf = getVal('tax-rmf');
+      const totalInc = salary * 12 + bonus;
+      const expDed = Math.min(totalInc * 0.5, 100000);
+      const perDed = 60000;
+      const actHealth = Math.min(health, 25000);
+      const actLifeHealth = Math.min(life + actHealth, 100000);
+      const actPVD = Math.min(pvd, totalInc * 0.15, 500000);
+      const actSSF = Math.min(ssf, totalInc * 0.30, 200000);
+      const actRMF = Math.min(rmf, totalInc * 0.30, 500000);
+      const totalRet = Math.min(500000, actPVD + actSSF + actRMF);
+      const totalDed = perDed + expDed + soc + actLifeHealth + totalRet;
+      const netInc = Math.max(0, totalInc - totalDed);
+      let tax = 0, rem = netInc;
+      if(rem > 5000000){ tax += (rem - 5000000) * 0.35; rem = 5000000; }
+      if(rem > 2000000){ tax += (rem - 2000000) * 0.30; rem = 2000000; }
+      if(rem > 1000000){ tax += (rem - 1000000) * 0.25; rem = 1000000; }
+      if(rem > 750000){ tax += (rem - 750000) * 0.20; rem = 750000; }
+      if(rem > 500000){ tax += (rem - 500000) * 0.15; rem = 500000; }
+      if(rem > 300000){ tax += (rem - 300000) * 0.10; rem = 300000; }
+      if(rem > 150000){ tax += (rem - 150000) * 0.05; }
+      document.getElementById('tax-res-inc').textContent = moneyCompact(totalInc);
+      document.getElementById('tax-res-ded').textContent = moneyCompact(totalDed);
+      document.getElementById('tax-res-net').textContent = moneyCompact(netInc);
+      document.getElementById('tax-res-tax').textContent = moneyCompact(tax);
+      state.finData.taxEstimate = tax;
+      updateDashboard();
+    }
+
+    function calcHealth(){
+      const asset = getVal('hlth-asset');
+      const liab = getVal('hlth-liab');
+      const liq = getVal('hlth-liq');
+      const inc = getVal('hlth-inc');
+      const exp = getVal('hlth-exp');
+      const debt = getVal('hlth-debt');
+      const nw = asset - liab;
+      const liqMonths = exp > 0 ? liq / exp : 0;
+      const dRatio = inc > 0 ? (debt / inc) * 100 : 0;
+      document.getElementById('hlth-res-nw').textContent = moneyCompact(nw);
+      document.getElementById('hlth-res-liq').textContent = `${trim1(liqMonths)} ${t('months')}`;
+      document.getElementById('hlth-res-debt').textContent = `${trim1(dRatio)}%`;
+      setStatusBadge(document.getElementById('hlth-res-liq-bdg'), liqMonths >= 6 ? 'status-ok':'status-warn', liqMonths >= 6 ? t('statusExcellent') : t('statusFair'));
+      setStatusBadge(document.getElementById('hlth-res-debt-bdg'), dRatio <= 30 ? 'status-ok':'status-danger', dRatio <= 30 ? t('statusSafe') : t('statusAlert'));
+      state.finData.assets = asset;
+      state.finData.liabilities = liab;
+      state.finData.liquidMonths = liqMonths;
+      state.finData.debtRatio = dRatio;
+      updateDashboard();
+    }
+
+    function calcFV(initial, monthly, annualRate, years){
+      const n = years * 12;
+      const r = (annualRate/100)/12;
+      const fvInitial = initial * Math.pow(1 + r, n);
+      const fvMonthly = r > 0 ? monthly * ((Math.pow(1 + r, n) - 1) / r) : monthly * n;
+      return fvInitial + fvMonthly;
+    }
+
+    function calcDCA(){
+      const initial = getVal('dca-initial');
+      const monthly = getVal('dca-monthly');
+      const rate = getVal('dca-rate');
+      const years = clamp(getVal('dca-years'), 1, 50);
+      const r = (rate/100)/12;
+      const labels = [], invested = [], portfolio = [];
+      for(let y=0;y<=years;y++){
+        const m = y*12;
+        const inv = initial + monthly*m;
+        const fvI = initial * Math.pow(1 + r, m);
+        const fvM = r > 0 ? monthly * ((Math.pow(1 + r, m) - 1) / r) : monthly*m;
+        labels.push(y===0 ? t('start') : `${t('yr')} ${y}`);
+        invested.push(Math.round(inv));
+        portfolio.push(Math.round(fvI + fvM));
+      }
+      const finalFV = portfolio.at(-1) || 0;
+      const finalInv = invested.at(-1) || 0;
+      const gain = finalFV - finalInv;
+      document.getElementById('dca-res-fv').textContent = moneyCompact(finalFV);
+      document.getElementById('dca-res-invested').textContent = moneyCompact(finalInv);
+      document.getElementById('dca-res-gain').textContent = moneyCompact(gain);
+      document.getElementById('dca-res-mult').textContent = `${finalInv > 0 ? trim1(finalFV / finalInv) : '0'}x`;
+      document.getElementById('dca-table-body').innerHTML = portfolio.slice(1).map((fv, idx) => {
+        const yr = idx + 1;
+        const inv = invested[yr];
+        const g = fv - inv;
+        return `<tr><td>${t('yr')} ${yr}</td><td>${moneyFull(inv)}</td><td>${moneyFull(fv)}</td><td class="${g>=0?'gain':'loss'}">${moneyFull(g)}</td></tr>`;
+      }).join('');
+      const data = {
+        labels,
+        datasets:[
+          { label: t('futureValue'), data: portfolio, borderColor:'#b8ff62', backgroundColor:'rgba(184,255,98,.12)', fill:true, borderWidth:3, tension:.35, pointRadius:0, pointHoverRadius:4 },
+          { label: t('totalContributed'), data: invested, borderColor:'rgba(255,255,255,.38)', fill:false, borderWidth:2, tension:0, pointRadius:0, borderDash:[8,6] }
+        ]
+      };
+      const options = {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ labels:{ color:'rgba(246,255,240,.75)' } }, tooltip:{ backgroundColor:'#0f1610', borderColor:'rgba(171,255,96,.22)', borderWidth:1, titleColor:'#f6fff0', bodyColor:'#dbe8d2' } },
+        scales:{
+          x:{ ticks:{ color:'rgba(154,176,143,.75)' }, grid:{ color:'rgba(255,255,255,.04)' } },
+          y:{ ticks:{ color:'rgba(154,176,143,.75)', callback:(val)=>moneyCompact(val) }, grid:{ color:'rgba(255,255,255,.04)' } }
+        }
+      };
+      if(state.dcaChart) state.dcaChart.destroy();
+      state.dcaChart = new Chart(document.getElementById('dca-chart'), { type:'line', data, options });
+    }
+
+    function calcInvest(){
+      const initial = getVal('inv-initial');
+      const monthly = getVal('inv-monthly');
+      const rate = getVal('inv-rate');
+      const years = getVal('inv-years');
+      const fv = calcFV(initial, monthly, rate, years);
+      const totalContrib = initial + monthly * years * 12;
+      const totalGain = fv - totalContrib;
+      const gainPct = fv > 0 ? (totalGain / fv) * 100 : 0;
+      document.getElementById('inv-res-fv').textContent = moneyCompact(fv);
+      document.getElementById('inv-res-contrib').textContent = moneyCompact(totalContrib);
+      document.getElementById('inv-res-gain').textContent = moneyCompact(totalGain);
+      document.getElementById('inv-res-mult').textContent = `${totalContrib > 0 ? trim1(fv / totalContrib) : '0'}x`;
+      document.getElementById('inv-total-contrib').textContent = moneyCompact(totalContrib);
+      document.getElementById('inv-total-gain').textContent = moneyCompact(totalGain);
+      document.getElementById('inv-gain-pct').textContent = `${trim1(gainPct)}%`;
+      document.getElementById('inv-gain-bar').style.width = `${Math.min(100, gainPct)}%`;
+      const checkpoints = [0.25,0.5,0.75,1].map(f => Math.max(1, Math.round(years*f))).filter((v,i,a)=>a.indexOf(v)===i);
+      document.getElementById('inv-milestones').innerHTML = checkpoints.map(yr => `<div class="milestone"><span>${t('yearN')} ${yr}</span><strong>${moneyCompact(calcFV(initial, monthly, rate, yr))}</strong></div>`).join('');
+    }
+
+    function calcCompare(){
+      const initial = getVal('cmp-initial');
+      const monthly = getVal('cmp-monthly');
+      const years = getVal('cmp-years');
+      const totalContrib = initial + monthly * years * 12;
+      const assets = [
+        { label:t('savingsAccount'), rate:1.5 },
+        { label:t('bonds'), rate:4 },
+        { label:t('balancedFund'), rate:6 },
+        { label:t('equityFund'), rate:9 },
+      ];
+      const results = assets.map(a => ({...a, fv: calcFV(initial, monthly, a.rate, years)}));
+      const max = Math.max(...results.map(r => r.fv), 1);
+      document.getElementById('cmp-result').innerHTML = results.map(r => {
+        const gain = r.fv - totalContrib;
+        return `<div class="bar-item"><div class="bar-top"><div><strong>${r.label}</strong><div style="color:var(--soft);font-size:.86rem;margin-top:5px">${t('avgReturn')} ${r.rate}%</div></div><div style="text-align:right"><div style="font-weight:900;font-size:1.2rem">${moneyCompact(r.fv)}</div><div style="color:${gain>=0?'var(--ok)':'var(--danger)'};font-size:.86rem;margin-top:4px">${t('gain')}: ${moneyCompact(gain)}</div></div></div><div class="bar-track"><div class="bar-fill" style="width:${(r.fv/max)*100}%"></div></div></div>`;
+      }).join('');
+    }
+
+    function setLoanType(type){
+      state.activeLoanType = type;
+      document.querySelectorAll('.loan-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.loanType === type));
+      const def = loanDefaults[type];
+      document.getElementById('loan-principal').value = formatNum(def.principal);
+      document.getElementById('loan-rate').value = def.rate;
+      document.getElementById('loan-years').value = def.years;
+      document.getElementById('loan-seg-label').textContent = t(type === 'home' ? 'segHome' : type === 'car' ? 'segCar' : 'segPersonal');
+      calcLoan();
+    }
+
+    function calcLoan(){
+      const principal = getVal('loan-principal');
+      const annualRate = getVal('loan-rate');
+      const years = getVal('loan-years');
+      const salary = getVal('loan-salary');
+      const n = Math.max(0, years * 12);
+      const r = (annualRate / 100) / 12;
+      let monthly = 0;
+      if(n > 0) monthly = r > 0 ? principal * r * Math.pow(1+r,n) / (Math.pow(1+r,n) - 1) : principal / n;
+      monthly = Math.round(monthly);
+      const totalPaid = Math.round(monthly * n);
+      const totalInterest = Math.max(0, totalPaid - principal);
+      const interestPct = totalPaid > 0 ? (totalInterest / totalPaid) * 100 : 0;
+      const firstInterest = Math.round(principal * r);
+      const firstPrincipal = Math.round(monthly - principal * r);
+      document.getElementById('loan-res-monthly').textContent = moneyCompact(monthly);
+      document.getElementById('loan-res-total').textContent = moneyCompact(totalPaid);
+      document.getElementById('loan-res-interest').textContent = moneyCompact(totalInterest);
+      document.getElementById('loan-int-bar').style.width = `${Math.min(100, interestPct)}%`;
+      document.getElementById('loan-principal-lbl').textContent = moneyCompact(principal);
+      document.getElementById('loan-interest-lbl').textContent = moneyCompact(totalInterest);
+      document.getElementById('loan-int-pct').textContent = `${trim1(interestPct)}%`;
+      document.getElementById('loan-total-pmts').textContent = `${n} ${t('periods')}`;
+      document.getElementById('loan-first-interest').textContent = moneyCompact(firstInterest);
+      document.getElementById('loan-first-principal').textContent = moneyCompact(firstPrincipal);
+      state.finData.loanMonthly = monthly;
+
+      // ── Risk Assessment ──
+      const dti = salary > 0 ? (monthly / salary) * 100 : 0;
+      const remainder = salary - monthly;
+      let riskClass, riskKey, adviceKey, barColor;
+      if(dti <= 25){
+        riskClass = 'status-ok'; riskKey = 'riskSafe'; adviceKey = 'adviceSafe';
+        barColor = 'linear-gradient(90deg,var(--lime),#6cff44)';
+      } else if(dti <= 35){
+        riskClass = 'status-ok'; riskKey = 'riskCaution'; adviceKey = 'adviceCaution';
+        barColor = 'linear-gradient(90deg,#ffe066,#ffc400)';
+      } else if(dti <= 45){
+        riskClass = 'status-warn'; riskKey = 'riskWarn'; adviceKey = 'adviceWarn';
+        barColor = 'linear-gradient(90deg,#ffb347,#ff7c40)';
+      } else {
+        riskClass = 'status-danger'; riskKey = 'riskDanger'; adviceKey = 'adviceDanger';
+        barColor = 'linear-gradient(90deg,var(--danger),#ff3333)';
+      }
+      setStatusBadge(document.getElementById('loan-risk-badge'), riskClass, t(riskKey));
+      document.getElementById('loan-dti-pct').textContent = salary > 0 ? `${trim1(dti)}%` : '-';
+      document.getElementById('loan-dti-bar').style.cssText = `height:100%;border-radius:inherit;transition:.4s ease;width:${Math.min(100, dti * 2)}%;background:${barColor};box-shadow:0 0 12px rgba(156,255,77,.2)`;
+      document.getElementById('loan-remainder').textContent = salary > 0 ? moneyCompact(remainder) : '-';
+      document.getElementById('loan-advice').textContent = salary > 0 ? t(adviceKey) : '';
+
+      updateDashboard();
+    }
+
+    function updateDashboard(){
+      const netWorth = state.finData.assets - state.finData.liabilities;
+      document.getElementById('dash-networth').textContent = moneyCompact(netWorth);
+      document.getElementById('dash-liquid').textContent = `${trim1(state.finData.liquidMonths)} ${t('months')}`;
+      document.getElementById('dash-debt').textContent = `${trim1(state.finData.debtRatio)}%`;
+      document.getElementById('dash-tax').textContent = moneyCompact(state.finData.taxEstimate);
+      document.getElementById('dash-loan').textContent = moneyCompact(state.finData.loanMonthly);
+      document.getElementById('dash-retire-current').textContent = moneyCompact(state.finData.retireCurrent);
+      document.getElementById('dash-retire-target').textContent = moneyCompact(state.finData.retireTarget);
+      const pct = state.finData.retireTarget > 0 ? Math.min(100, state.finData.retireCurrent / state.finData.retireTarget * 100) : 0;
+      document.getElementById('dash-retire-pct').textContent = `${trim1(pct)}%`;
+      document.getElementById('dash-retire-bar').style.width = `${pct}%`;
+      setStatusBadge(document.getElementById('dash-liquid-badge'), state.finData.liquidMonths >= 6 ? 'status-ok':'status-warn', state.finData.liquidMonths >= 6 ? t('statusExcellent') : t('statusFair'));
+      setStatusBadge(document.getElementById('dash-debt-badge'), state.finData.debtRatio <= 30 ? 'status-ok':'status-danger', state.finData.debtRatio <= 30 ? t('statusSafe') : t('statusAlert'));
+      document.getElementById('dashboardStatusChip').textContent = `● ${t('liveDashboard')}`;
+      document.getElementById('dash-networth-chip').textContent = t('dashStatus');
+
+      // ── Sync Wallpaper Card ──
+      const isGoodLiq = state.finData.liquidMonths >= 6;
+      const isGoodDebt = state.finData.debtRatio <= 30;
+      const liqBadgeStyle = (ok) => ok
+        ? 'font-size:.62rem;font-weight:800;padding:3px 9px;border-radius:99px;background:rgba(128,237,153,.12);color:#80ed99;border:1px solid rgba(128,237,153,.2)'
+        : 'font-size:.62rem;font-weight:800;padding:3px 9px;border-radius:99px;background:rgba(255,209,102,.12);color:#ffd166;border:1px solid rgba(255,209,102,.2)';
+      const debtBadgeStyle = (ok) => ok
+        ? 'font-size:.62rem;font-weight:800;padding:3px 9px;border-radius:99px;background:rgba(128,237,153,.12);color:#80ed99;border:1px solid rgba(128,237,153,.2)'
+        : 'font-size:.62rem;font-weight:800;padding:3px 9px;border-radius:99px;background:rgba(255,107,107,.12);color:#ff6b6b;border:1px solid rgba(255,107,107,.2)';
+      document.getElementById('wp-networth').textContent = moneyCompact(netWorth);
+      document.getElementById('wp-liquid').textContent = `${trim1(state.finData.liquidMonths)} ${state.lang === 'th' ? 'เดือน' : 'mo'}`;
+      document.getElementById('wp-debt').textContent = `${trim1(state.finData.debtRatio)}%`;
+      document.getElementById('wp-tax').textContent = moneyCompact(state.finData.taxEstimate);
+      document.getElementById('wp-loan').textContent = moneyCompact(state.finData.loanMonthly);
+      document.getElementById('wp-retire-current').textContent = moneyCompact(state.finData.retireCurrent);
+      document.getElementById('wp-retire-target').textContent = moneyCompact(state.finData.retireTarget);
+      document.getElementById('wp-retire-pct').textContent = `${trim1(pct)}%`;
+      document.getElementById('wp-retire-bar').style.width = `${pct}%`;
+      const wpLiq = document.getElementById('wp-liquid-badge');
+      wpLiq.textContent = isGoodLiq ? t('statusExcellent') : t('statusFair');
+      wpLiq.style.cssText = liqBadgeStyle(isGoodLiq);
+      const wpDebt = document.getElementById('wp-debt-badge');
+      wpDebt.textContent = isGoodDebt ? t('statusSafe') : t('statusAlert');
+      wpDebt.style.cssText = debtBadgeStyle(isGoodDebt);
+    }
+
+    function exportWallpaper(){
+      const btn = document.getElementById('exportBtn');
+      const orig = btn.textContent;
+      btn.textContent = '⏳';
+      btn.disabled = true;
+      const card = document.getElementById('wallpaper-card');
+      html2canvas(card, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#070c08',
+        logging: false,
+        width: 390,
+        height: 844,
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `FinPlanner-${new Date().toISOString().slice(0,10)}.png`;
+        link.href = canvas.toDataURL('image/png', 1.0);
+        link.click();
+        btn.textContent = orig;
+        btn.disabled = false;
+      }).catch(() => {
+        btn.textContent = orig;
+        btn.disabled = false;
+      });
+    }
+
+    function initSegments(){
+      document.querySelectorAll('.seg-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.activeInvestSegment = btn.dataset.segTarget;
+          document.querySelectorAll('.seg-btn').forEach(x => x.classList.toggle('active', x === btn));
+          document.querySelectorAll('#screen-invest .segment').forEach(seg => seg.classList.toggle('active', seg.id === `segment-${state.activeInvestSegment}`));
+        });
+      });
+    }
+
+    function init(){
+      renderNav();
+      updateLanguage();
+      bindInput(['prep-target','prep-current','prep-years'], calcPrep);
+      bindInput(['ret-age','ret-retire','ret-life','ret-exp','ret-save','ret-return','ret-return-post','ret-inf','ret-salary','ret-cur-exp','ret-inherit'], calcRetire);
+      bindInput(['tax-salary','tax-bonus','tax-soc','tax-pvd','tax-life','tax-health','tax-ssf','tax-rmf'], calcTax);
+      bindInput(['hlth-asset','hlth-liab','hlth-liq','hlth-inc','hlth-exp','hlth-debt'], calcHealth);
+      bindInput(['dca-initial','dca-monthly','dca-rate','dca-years'], calcDCA);
+      bindInput(['inv-initial','inv-monthly','inv-rate','inv-years'], calcInvest);
+      bindInput(['cmp-initial','cmp-monthly','cmp-years'], calcCompare);
+      bindInput(['loan-principal','loan-rate','loan-years','loan-salary'], calcLoan);
+      document.getElementById('langToggle').addEventListener('click', () => {
+        state.lang = state.lang === 'th' ? 'en' : 'th';
+        updateLanguage();
+      });
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        document.body.classList.toggle('light');
+        document.getElementById('themeToggle').textContent = document.body.classList.contains('light') ? '☾' : '☀';
+      });
+      document.getElementById('hamburgerBtn').addEventListener('click', openMobileDrawer);
+      document.getElementById('drawerClose').addEventListener('click', closeMobileDrawer);
+      document.getElementById('mobileOverlay').addEventListener('click', closeMobileDrawer);
+      initNumericInputs();
+      initSegments();
+      document.querySelectorAll('.loan-btn').forEach(btn => btn.addEventListener('click', () => setLoanType(btn.dataset.loanType)));
+      calcPrep(); calcRetire(); calcTax(); calcHealth(); calcDCA(); calcInvest(); calcCompare(); setLoanType('home');
+      updateDashboard();
+      // Init wallpaper date
+      const now = new Date();
+      const dateShort = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+      const dateFull  = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long',  day: 'numeric' });
+      document.getElementById('wp-date').textContent = dateFull;
+      document.getElementById('wp-footer-date').textContent = dateShort;
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
